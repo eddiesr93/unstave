@@ -2,6 +2,9 @@ use std::fmt::Write as _;
 
 use comfy_table::{presets::UTF8_FULL, Cell, ContentArrangement, Table};
 use owo_colors::OwoColorize;
+use unstave_core::analysis::amplification::{
+    AmplificationReport, EntrypointProjection, ImportSite, SkipReason,
+};
 use unstave_core::analysis::cycles::Cycle;
 use unstave_core::analysis::fan::{FanEntry, FanReport};
 use unstave_core::graph::ModuleGraph;
@@ -102,6 +105,195 @@ pub fn render_graph(
     ));
 
     out
+}
+
+/// Barrel amplification — the headline report.
+pub fn render_barrels(
+    analysis: &Analysis,
+    report: &AmplificationReport,
+    min_amplification: Option<f64>,
+    opts: &RenderOptions,
+) -> String {
+    let root = &analysis.workspace.root;
+    let max_rows = if opts.max_rows == 0 {
+        DEFAULT_MAX_ROWS
+    } else {
+        opts.max_rows
+    };
+
+    let barrels: Vec<_> = report
+        .barrels
+        .iter()
+        .filter(|b| min_amplification.is_none_or(|min| b.max_amplification >= min))
+        .collect();
+
+    // A barrel nobody imports costs nothing, but saying "no barrels" when the
+    // workspace has several would be misleading — report both numbers.
+    let mut out = format!(
+        "{}\n\n",
+        opts.dim(&format!(
+            "{} barrel(s) classified, {} of them imported",
+            report.classified_barrels,
+            report.barrels.len()
+        ))
+    );
+
+    if barrels.is_empty() {
+        let _ = writeln!(
+            out,
+            "{}",
+            opts.bold("No barrel imports to report — nothing is importing through a barrel.")
+        );
+        return out;
+    }
+
+    // Ranked by absolute excess, per §5.3 — the ratio is shown but does not sort.
+    let mut table = new_table();
+    table.set_header(vec![
+        header("barrel", opts),
+        header("sites", opts),
+        header("cost", opts),
+        header("excess", opts),
+        header("worst", opts),
+        header("amp", opts),
+        header("rewritable", opts),
+    ]);
+    for barrel in barrels.iter().take(max_rows) {
+        let flag = if barrel.has_side_effects {
+            " ⚠ side effects"
+        } else {
+            ""
+        };
+        table.add_row(vec![
+            Cell::new(format!(
+                "{}{flag}",
+                relative(root, &barrel.barrel).display()
+            )),
+            Cell::new(barrel.import_sites),
+            Cell::new(barrel.actual_cost),
+            Cell::new(barrel.total_excess),
+            Cell::new(barrel.worst_excess),
+            Cell::new(format_ratio(barrel.max_amplification)),
+            Cell::new(format!(
+                "{}/{}",
+                barrel.rewritable_symbols,
+                barrel.rewritable_symbols + barrel.skipped_symbols
+            )),
+        ]);
+    }
+    let _ = writeln!(out, "{}\n{table}\n", opts.bold("Barrel amplification"));
+
+    if barrels.len() > max_rows {
+        let more = barrels.len() - max_rows;
+        let _ = writeln!(
+            out,
+            "{}\n",
+            opts.dim(&format!(
+                "+{more} more, use --format json for the full list"
+            ))
+        );
+    }
+
+    out.push_str(&worst_sites_table(root, &report.sites, opts, max_rows));
+    out.push_str(&projection_table(root, &report.entrypoints, opts));
+    out.push_str(&skips_table(&report.skipped_by_reason, opts));
+    out
+}
+
+fn worst_sites_table(
+    root: &std::path::Path,
+    sites: &[ImportSite],
+    opts: &RenderOptions,
+    max_rows: usize,
+) -> String {
+    let sites: Vec<&ImportSite> = sites.iter().filter(|s| s.excess() > 0).collect();
+    if sites.is_empty() {
+        return String::new();
+    }
+
+    let mut table = new_table();
+    table.set_header(vec![
+        header("import site", opts),
+        header("symbols", opts),
+        header("actual", opts),
+        header("minimal", opts),
+        header("excess", opts),
+    ]);
+    for site in sites.iter().take(max_rows) {
+        table.add_row(vec![
+            Cell::new(format!(
+                "{} → {}",
+                relative(root, &site.importer).display(),
+                relative(root, &site.barrel).display()
+            )),
+            Cell::new(site.symbols.join(", ")),
+            Cell::new(site.actual_cost),
+            Cell::new(site.minimal_cost),
+            Cell::new(site.excess()),
+        ]);
+    }
+    format!("{}\n{table}\n\n", opts.bold("Worst import sites"))
+}
+
+fn projection_table(
+    root: &std::path::Path,
+    projections: &[EntrypointProjection],
+    opts: &RenderOptions,
+) -> String {
+    if projections.is_empty() {
+        return format!(
+            "{}\n\n",
+            opts.dim("No entrypoints configured — set `entrypoints` in unstave.toml to see the projected per-entrypoint saving.")
+        );
+    }
+
+    let mut table = new_table();
+    table.set_header(vec![
+        header("entrypoint", opts),
+        header("before", opts),
+        header("after", opts),
+        header("removed", opts),
+    ]);
+    for p in projections {
+        let percent = if p.before == 0 {
+            0.0
+        } else {
+            (p.removed() as f64 / p.before as f64) * 100.0
+        };
+        table.add_row(vec![
+            Cell::new(relative(root, &p.entrypoint).display().to_string()),
+            Cell::new(p.before),
+            Cell::new(p.after),
+            Cell::new(format!("{} ({percent:.0}%)", p.removed())),
+        ]);
+    }
+    format!(
+        "{}\n{table}\n\n",
+        opts.bold("Projected per-entrypoint module count after a full codemod")
+    )
+}
+
+fn skips_table(skips: &[(SkipReason, usize)], opts: &RenderOptions) -> String {
+    if skips.is_empty() {
+        return String::new();
+    }
+    let mut table = new_table();
+    table.set_header(vec![header("reason", opts), header("symbols", opts)]);
+    for (reason, count) in skips {
+        table.add_row(vec![Cell::new(format!("{reason:?}")), Cell::new(*count)]);
+    }
+    format!(
+        "{}\n{table}\n\n",
+        opts.bold("Symbols not eligible for rewrite")
+    )
+}
+
+fn format_ratio(value: f64) -> String {
+    if value.is_infinite() {
+        "∞".to_string()
+    } else {
+        format!("{value:.1}×")
+    }
 }
 
 /// Focused output for the `cycles` subcommand.

@@ -3,7 +3,8 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::{Args, Parser, Subcommand};
-use unstave_core::analysis::{cycles, fan};
+use unstave_core::analysis::symbols::SymbolResolver;
+use unstave_core::analysis::{amplification, barrel, cycles, fan};
 use unstave_core::graph::ModuleGraph;
 use unstave_core::{analyze, Config};
 use unstave_report::{terminal, RenderOptions};
@@ -109,7 +110,7 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
     match &cli.command {
         Command::Analyze(args) => run_analyze(&cli.global, args),
-        Command::Barrels { .. } => not_yet("barrels", "M4"),
+        Command::Barrels { min_amplification } => run_barrels(&cli.global, *min_amplification),
         Command::Cycles => run_cycles(&cli.global),
         Command::DeadExports => not_yet("dead-exports", "M5"),
         Command::Fix(_) => not_yet("fix", "M6"),
@@ -118,11 +119,8 @@ fn main() -> Result<()> {
 }
 
 fn run_analyze(global: &GlobalArgs, args: &AnalyzeArgs) -> Result<()> {
-    let config = Config::load(&global.root, global.config.as_deref())
-        .with_context(|| format!("loading config for {}", global.root.display()))?;
-
-    let analysis = analyze(&global.root, &config)
-        .with_context(|| format!("analyzing {}", global.root.display()))?;
+    let loaded = load(global)?;
+    let analysis = &loaded.analysis;
 
     for format in dedup_formats(&args.format) {
         match format {
@@ -131,14 +129,19 @@ fn run_analyze(global: &GlobalArgs, args: &AnalyzeArgs) -> Result<()> {
                     color: use_color(),
                     max_rows: 0,
                 };
-                print!("{}", terminal::render(&analysis, &opts));
+                print!("{}", terminal::render(analysis, &opts));
 
-                let graph = ModuleGraph::build(&analysis.modules);
-                let found = cycles::find(&graph, args.include_type_edges);
-                let fan = fan::compute(&graph, args.include_type_edges, FAN_LIMIT);
+                let found = cycles::find(&loaded.graph, args.include_type_edges);
+                let fan = fan::compute(&loaded.graph, args.include_type_edges, FAN_LIMIT);
                 print!(
                     "{}",
-                    terminal::render_graph(&analysis, &graph, &found, &fan, &opts)
+                    terminal::render_graph(analysis, &loaded.graph, &found, &fan, &opts)
+                );
+
+                let report = amplification_report(&loaded, args.include_type_edges);
+                print!(
+                    "{}",
+                    terminal::render_barrels(analysis, &report, None, &opts)
                 );
             }
             Format::Json | Format::Dot | Format::Mermaid | Format::Html => {
@@ -166,13 +169,65 @@ fn run_analyze(global: &GlobalArgs, args: &AnalyzeArgs) -> Result<()> {
 /// Modules ranked per fan-in/fan-out table.
 const FAN_LIMIT: usize = 20;
 
-fn run_cycles(global: &GlobalArgs) -> Result<()> {
+/// Shared setup for the graph-level commands.
+struct Loaded {
+    config: Config,
+    analysis: unstave_core::Analysis,
+    graph: ModuleGraph,
+}
+
+fn load(global: &GlobalArgs) -> Result<Loaded> {
     let config = Config::load(&global.root, global.config.as_deref())
         .with_context(|| format!("loading config for {}", global.root.display()))?;
     let analysis = analyze(&global.root, &config)
         .with_context(|| format!("analyzing {}", global.root.display()))?;
-
     let graph = ModuleGraph::build(&analysis.modules);
+    Ok(Loaded {
+        config,
+        analysis,
+        graph,
+    })
+}
+
+fn amplification_report(
+    loaded: &Loaded,
+    include_type_edges: bool,
+) -> amplification::AmplificationReport {
+    let symbols = SymbolResolver::new(&loaded.graph, &loaded.analysis.modules);
+    let barrels = barrel::classify(&loaded.graph, &loaded.config.barrel);
+    let entrypoints = loaded
+        .config
+        .entrypoint_paths(&loaded.analysis.workspace.root);
+    amplification::compute(
+        &loaded.graph,
+        &loaded.analysis.modules,
+        &barrels,
+        &symbols,
+        &entrypoints,
+        include_type_edges,
+    )
+}
+
+fn run_barrels(global: &GlobalArgs, min_amplification: Option<f64>) -> Result<()> {
+    let loaded = load(global)?;
+    let report = amplification_report(&loaded, false);
+    let opts = RenderOptions {
+        color: use_color(),
+        max_rows: 0,
+    };
+    print!(
+        "{}",
+        terminal::render_barrels(&loaded.analysis, &report, min_amplification, &opts)
+    );
+    Ok(())
+}
+
+fn run_cycles(global: &GlobalArgs) -> Result<()> {
+    let Loaded {
+        config,
+        analysis,
+        graph,
+    } = load(global)?;
     let found = cycles::find(&graph, false);
     let opts = RenderOptions {
         color: use_color(),
