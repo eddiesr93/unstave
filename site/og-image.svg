@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">unstave — see what one import drags in</title>
+  <desc id="desc">A dark editorial card showing a TypeScript import expanding through three barrels into multiple modules.</desc>
+  <rect width="1200" height="630" fill="#181b13"/>
+  <path d="M0 1H1200M0 629H1200" stroke="#454b3c"/>
+
+  <g font-family="Arial Narrow, Arial, sans-serif" fill="#f0f1e7">
+    <text x="64" y="78" font-size="37" font-weight="700" letter-spacing="1">UN</text>
+    <rect x="112" y="47" width="6" height="35" fill="#bfff45" transform="rotate(24 115 64)"/>
+    <text x="126" y="78" font-size="37" font-weight="700" letter-spacing="1">STAVE</text>
+    <text x="64" y="238" font-size="91" font-weight="700" letter-spacing="-2">SEE WHAT ONE IMPORT</text>
+    <text x="64" y="332" font-size="91" font-weight="700" letter-spacing="-2" fill="#bfff45">DRAGS IN.</text>
+  </g>
+
+  <g transform="translate(665 80)">
+    <path d="M60 226C125 226 125 226 182 226M222 226C280 226 280 226 336 226M376 226C418 226 421 132 470 132M376 226C425 226 425 226 470 226M376 226C418 226 421 320 470 320" fill="none" stroke="#d9a537" stroke-width="3"/>
+    <path d="M60 214C187 60 350 54 470 120" fill="none" stroke="#bfff45" stroke-width="4" stroke-dasharray="9 9"/>
+    <circle cx="40" cy="226" r="20" fill="#181b13" stroke="#f0f1e7" stroke-width="3"/>
+    <path d="M202 197L231 226L202 255L173 226Z" fill="#273516" stroke="#bfff45" stroke-width="3"/>
+    <path d="M356 197L385 226L356 255L327 226Z" fill="#273516" stroke="#bfff45" stroke-width="3"/>
+    <circle cx="490" cy="132" r="18" fill="#bfff45" stroke="#bfff45" stroke-width="3"/>
+    <circle cx="490" cy="226" r="18" fill="#181b13" stroke="#9ca28f" stroke-width="3"/>
+    <circle cx="490" cy="320" r="18" fill="#181b13" stroke="#9ca28f" stroke-width="3"/>
+    <g fill="#9ca28f" font-family="Menlo, monospace" font-size="14">
+      <text x="12" y="270">IMPORTER</text>
+      <text x="171" y="290">BARREL</text>
+      <text x="326" y="290">BARREL</text>
+      <text x="450" y="370">MODULES</text>
+    </g>
+    <g transform="translate(166 154)">
+      <rect width="112" height="27" rx="2" fill="#bfff45"/>
+      <text x="56" y="19" text-anchor="middle" font-family="Menlo, monospace" font-size="13" font-weight="700" fill="#181b13">6.0× COST</text>
+    </g>
+  </g>
+
+  <g font-family="Menlo, monospace" font-size="16" letter-spacing="1">
+    <text x="64" y="574" fill="#9ca28f">MODULE GRAPH / DISASSEMBLED</text>
+    <text x="1136" y="574" text-anchor="end" fill="#bfff45">RUST + OXC</text>
+  </g>
+</svg>
