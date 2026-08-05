@@ -10,10 +10,338 @@ use unstave_core::analysis::fan::{FanEntry, FanReport};
 use unstave_core::graph::ModuleGraph;
 use unstave_core::pipeline::{relative, Analysis};
 
+use crate::report::{AnalysisReport, DeadExportReport, FanEntryReport};
 use crate::RenderOptions;
 
 /// Rows shown per section before truncating.
 const DEFAULT_MAX_ROWS: usize = 20;
+
+/// Complete terminal rendering of the common, renderer-neutral report.
+pub fn render_report(report: &AnalysisReport, opts: &RenderOptions) -> String {
+    let max_rows = if opts.max_rows == 0 {
+        DEFAULT_MAX_ROWS
+    } else {
+        opts.max_rows
+    };
+    let mut out = String::new();
+
+    let mut summary = new_table();
+    summary.set_header(vec![header("metric", opts), header("value", opts)]);
+    summary.add_row(vec![
+        Cell::new("files analyzed"),
+        Cell::new(report.summary.files_analyzed),
+    ]);
+    summary.add_row(vec![
+        Cell::new("packages"),
+        Cell::new(report.summary.packages),
+    ]);
+    summary.add_row(vec![
+        Cell::new("modules"),
+        Cell::new(report.summary.modules),
+    ]);
+    summary.add_row(vec![Cell::new("edges"), Cell::new(report.summary.edges)]);
+    summary.add_row(vec![
+        Cell::new("external packages"),
+        Cell::new(report.summary.external_packages),
+    ]);
+    summary.add_row(vec![
+        Cell::new("unresolved specifiers"),
+        Cell::new(report.summary.unresolved_specifiers),
+    ]);
+    summary.add_row(vec![Cell::new("cycles"), Cell::new(report.summary.cycles)]);
+    summary.add_row(vec![
+        Cell::new("dead exports"),
+        Cell::new(report.summary.dead_exports),
+    ]);
+    let _ = writeln!(out, "{summary}\n");
+
+    if !report.unresolved_specifiers.is_empty() {
+        let mut table = new_table();
+        table.set_header(vec![
+            header("specifier", opts),
+            header("imported from", opts),
+            header("reason", opts),
+        ]);
+        for item in report.unresolved_specifiers.iter().take(max_rows) {
+            table.add_row(vec![
+                Cell::new(&item.specifier),
+                Cell::new(&item.importer),
+                Cell::new(&item.reason),
+            ]);
+        }
+        let _ = writeln!(out, "{}\n{table}\n", opts.bold("Unresolved specifiers"));
+        push_more(&mut out, report.unresolved_specifiers.len(), max_rows, opts);
+    }
+
+    if !report.parse_failures.is_empty() {
+        let mut table = new_table();
+        table.set_header(vec![header("file", opts), header("first error", opts)]);
+        for failure in report.parse_failures.iter().take(max_rows) {
+            table.add_row(vec![
+                Cell::new(&failure.path),
+                Cell::new(failure.errors.first().map_or("", String::as_str)),
+            ]);
+        }
+        let _ = writeln!(out, "{}\n{table}\n", opts.bold("Files with parse errors"));
+        push_more(&mut out, report.parse_failures.len(), max_rows, opts);
+    }
+
+    if report.cycles.is_empty() {
+        let _ = writeln!(out, "{}\n", opts.bold("No cycles."));
+    } else {
+        let _ = writeln!(out, "{}", opts.bold("Cycles"));
+        for cycle in report.cycles.iter().take(max_rows) {
+            let _ = writeln!(out, "  {} modules:", cycle.members.len());
+            for (index, path) in cycle.shortest_path.iter().enumerate() {
+                let branch = if index == 0 {
+                    "┌─"
+                } else if index + 1 == cycle.shortest_path.len() {
+                    "└─"
+                } else {
+                    "├─"
+                };
+                let _ = writeln!(out, "    {branch} {path}");
+            }
+            out.push('\n');
+        }
+        push_more(&mut out, report.cycles.len(), max_rows, opts);
+    }
+
+    out.push_str(&render_dead_exports(&report.dead_exports, opts, max_rows));
+
+    out.push_str(&report_fan_table(
+        "Fan-in (most depended upon)",
+        &report.fan.fan_in,
+        max_rows,
+        opts,
+    ));
+    out.push_str(&report_fan_table(
+        "Fan-out (pulls in the most)",
+        &report.fan.fan_out,
+        max_rows,
+        opts,
+    ));
+
+    let amplification = &report.amplification;
+    let _ = writeln!(
+        out,
+        "{}\n",
+        opts.dim(&format!(
+            "{} barrel(s) classified, {} of them imported",
+            amplification.classified_barrels,
+            amplification.barrels.len()
+        ))
+    );
+    if amplification.barrels.is_empty() {
+        let _ = writeln!(
+            out,
+            "{}\n",
+            opts.bold("No barrel imports to report — nothing is importing through a barrel.")
+        );
+    } else {
+        let mut table = new_table();
+        table.set_header(vec![
+            header("barrel", opts),
+            header("sites", opts),
+            header("cost", opts),
+            header("excess", opts),
+            header("worst", opts),
+            header("amp", opts),
+            header("rewritable", opts),
+        ]);
+        for barrel in amplification.barrels.iter().take(max_rows) {
+            let side_effect = if barrel.has_side_effects {
+                " ⚠ side effects"
+            } else {
+                ""
+            };
+            table.add_row(vec![
+                Cell::new(format!("{}{side_effect}", barrel.barrel)),
+                Cell::new(barrel.import_sites),
+                Cell::new(barrel.actual_cost),
+                Cell::new(barrel.total_excess),
+                Cell::new(barrel.worst_excess),
+                Cell::new(format_optional_ratio(barrel.max_amplification)),
+                Cell::new(format!(
+                    "{}/{}",
+                    barrel.rewritable_symbols,
+                    barrel.rewritable_symbols + barrel.skipped_symbols
+                )),
+            ]);
+        }
+        let _ = writeln!(out, "{}\n{table}\n", opts.bold("Barrel amplification"));
+        push_more(&mut out, amplification.barrels.len(), max_rows, opts);
+
+        let worst: Vec<_> = amplification
+            .sites
+            .iter()
+            .filter(|site| site.excess > 0)
+            .collect();
+        if !worst.is_empty() {
+            let mut sites = new_table();
+            sites.set_header(vec![
+                header("import site", opts),
+                header("symbols", opts),
+                header("actual", opts),
+                header("minimal", opts),
+                header("excess", opts),
+            ]);
+            for site in worst.iter().take(max_rows) {
+                sites.add_row(vec![
+                    Cell::new(format!("{} → {}", site.importer, site.barrel)),
+                    Cell::new(site.symbols.join(", ")),
+                    Cell::new(site.actual_cost),
+                    Cell::new(site.minimal_cost),
+                    Cell::new(site.excess),
+                ]);
+            }
+            let _ = writeln!(out, "{}\n{sites}\n", opts.bold("Worst import sites"));
+            push_more(&mut out, worst.len(), max_rows, opts);
+        }
+    }
+
+    if amplification.entrypoints.is_empty() {
+        let _ = writeln!(
+            out,
+            "{}\n",
+            opts.dim("No entrypoints configured — set `entrypoints` in unstave.toml to see the projected per-entrypoint saving.")
+        );
+    } else {
+        let mut table = new_table();
+        table.set_header(vec![
+            header("entrypoint", opts),
+            header("before", opts),
+            header("after", opts),
+            header("removed", opts),
+        ]);
+        for entrypoint in &amplification.entrypoints {
+            let percent = if entrypoint.before == 0 {
+                0.0
+            } else {
+                entrypoint.removed as f64 / entrypoint.before as f64 * 100.0
+            };
+            table.add_row(vec![
+                Cell::new(&entrypoint.entrypoint),
+                Cell::new(entrypoint.before),
+                Cell::new(entrypoint.after),
+                Cell::new(format!("{} ({percent:.0}%)", entrypoint.removed)),
+            ]);
+        }
+        let _ = writeln!(
+            out,
+            "{}\n{table}\n",
+            opts.bold("Projected per-entrypoint module count after a full codemod")
+        );
+    }
+
+    if !amplification.skipped_by_reason.is_empty() {
+        let mut table = new_table();
+        table.set_header(vec![header("reason", opts), header("symbols", opts)]);
+        for skipped in &amplification.skipped_by_reason {
+            table.add_row(vec![
+                Cell::new(format!("{:?}", skipped.reason)),
+                Cell::new(skipped.symbols),
+            ]);
+        }
+        let _ = writeln!(
+            out,
+            "{}\n{table}\n",
+            opts.bold("Symbols not eligible for rewrite")
+        );
+    }
+
+    let timing = format!(
+        "discovery {}ms · parse {}ms · resolve {}ms · total {}ms",
+        report.timings.discovery_ms,
+        report.timings.parse_ms,
+        report.timings.resolve_ms,
+        report.timings.total_ms
+    );
+    let _ = writeln!(out, "{}", opts.dim(&timing));
+    out
+}
+
+/// Focused output for the `dead-exports` subcommand.
+pub fn render_dead_exports(
+    exports: &[DeadExportReport],
+    opts: &RenderOptions,
+    max_rows: usize,
+) -> String {
+    if exports.is_empty() {
+        return format!("{}\n", opts.bold("No dead exports found."));
+    }
+
+    let max_rows = if max_rows == 0 {
+        DEFAULT_MAX_ROWS
+    } else {
+        max_rows
+    };
+    let mut table = new_table();
+    table.set_header(vec![
+        header("module", opts),
+        header("export", opts),
+        header("confidence", opts),
+    ]);
+    for export in exports.iter().take(max_rows) {
+        table.add_row(vec![
+            Cell::new(&export.module),
+            Cell::new(&export.name),
+            Cell::new(if export.low_confidence {
+                "low — touched by export */namespace/dynamic import"
+            } else {
+                "high"
+            }),
+        ]);
+    }
+
+    let mut out = format!("{}\n{table}\n\n", opts.bold("Dead exports"));
+    push_more(&mut out, exports.len(), max_rows, opts);
+    out
+}
+
+fn report_fan_table(
+    title: &str,
+    entries: &[FanEntryReport],
+    max_rows: usize,
+    opts: &RenderOptions,
+) -> String {
+    if entries.is_empty() {
+        return String::new();
+    }
+    let mut table = new_table();
+    table.set_header(vec![
+        header("module", opts),
+        header("direct", opts),
+        header("transitive", opts),
+    ]);
+    for entry in entries.iter().take(max_rows) {
+        table.add_row(vec![
+            Cell::new(&entry.path),
+            Cell::new(entry.direct),
+            Cell::new(entry.transitive),
+        ]);
+    }
+    let mut out = format!("{}\n{table}\n\n", opts.bold(title));
+    push_more(&mut out, entries.len(), max_rows, opts);
+    out
+}
+
+fn push_more(out: &mut String, total: usize, shown: usize, opts: &RenderOptions) {
+    if total > shown {
+        let _ = writeln!(
+            out,
+            "{}\n",
+            opts.dim(&format!(
+                "+{} more, use --format json for the full list",
+                total - shown
+            ))
+        );
+    }
+}
+
+fn format_optional_ratio(value: Option<f64>) -> String {
+    value.map_or_else(|| "∞".to_string(), |ratio| format!("{ratio:.1}×"))
+}
 
 /// Discovery + resolution summary: what we found, and what we could not resolve.
 pub fn render(analysis: &Analysis, opts: &RenderOptions) -> String {

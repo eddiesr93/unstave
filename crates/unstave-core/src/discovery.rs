@@ -18,6 +18,12 @@ pub struct Package {
     pub tsconfig: Option<PathBuf>,
     /// `sideEffects: false` in `package.json` means every module here is side-effect free.
     pub side_effects_false: bool,
+    /// Source files exposed through the package's public `exports` map.
+    ///
+    /// Dead-export analysis treats these and everything reachable from them as
+    /// public API. Wildcard targets conservatively expand to every matching source
+    /// file discovered inside the package.
+    pub public_entrypoints: Vec<PathBuf>,
 }
 
 /// How the workspace declares its packages. Recorded for reporting; package
@@ -111,7 +117,7 @@ pub fn discover(root: &Path, config: &Config) -> Result<Workspace> {
     files.sort();
     package_jsons.sort();
 
-    let packages = build_packages(&root, &package_jsons);
+    let packages = build_packages(&root, &package_jsons, &files);
 
     let kind = detect_workspace_kind(&root);
 
@@ -158,12 +164,12 @@ fn build_globset(patterns: &[String]) -> Result<GlobSet> {
     })
 }
 
-fn build_packages(root: &Path, package_jsons: &[PathBuf]) -> Vec<Package> {
+fn build_packages(root: &Path, package_jsons: &[PathBuf], files: &[PathBuf]) -> Vec<Package> {
     let mut packages: Vec<Package> = package_jsons
         .iter()
         .filter_map(|manifest| {
             let dir = manifest.parent()?;
-            Some(read_package(dir, manifest))
+            Some(read_package(dir, manifest, files))
         })
         .collect();
 
@@ -177,15 +183,17 @@ fn build_packages(root: &Path, package_jsons: &[PathBuf]) -> Vec<Package> {
                 name: None,
                 tsconfig: find_tsconfig(root),
                 side_effects_false: false,
+                public_entrypoints: Vec::new(),
             },
         );
     }
     packages
 }
 
-fn read_package(dir: &Path, manifest: &Path) -> Package {
+fn read_package(dir: &Path, manifest: &Path, files: &[PathBuf]) -> Package {
     let mut name = None;
     let mut side_effects_false = false;
+    let mut public_entrypoints = Vec::new();
 
     if let Ok(text) = std::fs::read_to_string(manifest) {
         if let Ok(json) = serde_json::from_str::<serde_json::Value>(&text) {
@@ -196,14 +204,92 @@ fn read_package(dir: &Path, manifest: &Path) -> Package {
             // Only a literal `false` means "nothing here has side effects". An array
             // or a glob string means some files do, which we treat conservatively.
             side_effects_false = json.get("sideEffects") == Some(&serde_json::Value::Bool(false));
+            if let Some(exports) = json.get("exports") {
+                let mut targets = Vec::new();
+                collect_export_targets(exports, &mut targets);
+                for target in targets {
+                    expand_export_target(dir, target, files, &mut public_entrypoints);
+                }
+            }
         }
     }
+
+    public_entrypoints.sort();
+    public_entrypoints.dedup();
 
     Package {
         root: dir.to_path_buf(),
         name,
         tsconfig: find_tsconfig(dir),
         side_effects_false,
+        public_entrypoints,
+    }
+}
+
+fn collect_export_targets<'a>(value: &'a serde_json::Value, targets: &mut Vec<&'a str>) {
+    match value {
+        serde_json::Value::String(target) if target.starts_with('.') => targets.push(target),
+        serde_json::Value::Array(items) => {
+            for item in items {
+                collect_export_targets(item, targets);
+            }
+        }
+        serde_json::Value::Object(map) => {
+            for target in map.values() {
+                collect_export_targets(target, targets);
+            }
+        }
+        _ => {}
+    }
+}
+
+fn expand_export_target(
+    package_root: &Path,
+    target: &str,
+    files: &[PathBuf],
+    out: &mut Vec<PathBuf>,
+) {
+    let relative = target.trim_start_matches("./");
+    if let Some((prefix, _)) = relative.split_once('*') {
+        let prefix = package_root.join(prefix);
+        out.extend(
+            files
+                .iter()
+                .filter(|file| file.starts_with(&prefix))
+                .cloned(),
+        );
+        return;
+    }
+
+    let path = package_root.join(relative);
+    if path.is_file() {
+        out.push(path);
+        return;
+    }
+
+    for extension in ["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"] {
+        let candidate = path.with_extension(extension);
+        if candidate.is_file() {
+            out.push(candidate);
+            return;
+        }
+    }
+
+    for file_name in [
+        "index.ts",
+        "index.tsx",
+        "index.mts",
+        "index.cts",
+        "index.js",
+        "index.jsx",
+        "index.mjs",
+        "index.cjs",
+    ] {
+        let candidate = path.join(file_name);
+        if candidate.is_file() {
+            out.push(candidate);
+            return;
+        }
     }
 }
 

@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 
 use unstave_core::analysis::amplification::{self, SkipReason};
 use unstave_core::analysis::barrel::{self, BarrelKind};
+use unstave_core::analysis::dead_exports;
 use unstave_core::analysis::symbols::{Resolution, SymbolResolver};
 use unstave_core::config::BarrelConfig;
 use unstave_core::graph::ModuleGraph;
@@ -330,4 +331,51 @@ fn nested_barrels_amplify_through_every_layer() {
     let projection = &report.entrypoints[0];
     assert_eq!(projection.before, 7);
     assert_eq!(projection.after, 2);
+}
+
+#[test]
+fn finds_unreferenced_exported_definitions() {
+    let ctx = ctx("pure-barrel");
+    let resolver = ctx.resolver();
+    let dead = dead_exports::find(&ctx.analysis, &ctx.graph, &resolver, &[]);
+    let clients = dead
+        .iter()
+        .filter(|export| ctx.rel(&export.module).starts_with("src/clients/"))
+        .map(|export| export.name.as_str())
+        .collect::<Vec<_>>();
+
+    assert_eq!(
+        clients,
+        vec!["BetaClient", "DeltaClient", "EpsilonClient", "GammaClient"]
+    );
+    assert!(dead.iter().all(|export| export.name != "AlphaClient"));
+}
+
+#[test]
+fn configured_entrypoint_exports_are_not_reported_dead() {
+    let ctx = ctx("simple");
+    let resolver = ctx.resolver();
+    let dead = dead_exports::find(
+        &ctx.analysis,
+        &ctx.graph,
+        &resolver,
+        &[ctx.root.join("src/main.ts")],
+    );
+
+    assert!(dead.is_empty(), "entrypoint exports are public: {dead:?}");
+}
+
+#[test]
+fn star_reexported_definitions_are_low_confidence() {
+    let ctx = ctx("nested-barrels");
+    let resolver = ctx.resolver();
+    let dead = dead_exports::find(&ctx.analysis, &ctx.graph, &resolver, &[]);
+
+    for name in ["two", "three"] {
+        let export = dead
+            .iter()
+            .find(|export| export.name == name)
+            .unwrap_or_else(|| panic!("{name} should be unused"));
+        assert!(export.low_confidence, "{name} is exposed through export *");
+    }
 }

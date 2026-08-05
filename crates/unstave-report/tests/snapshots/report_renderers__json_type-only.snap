@@ -1,0 +1,128 @@
+---
+source: crates/unstave-report/tests/report_renderers.rs
+expression: rendered
+---
+{
+  "schemaVersion": 1,
+  "workspace": {
+    "root": ".",
+    "kind": "single",
+    "packages": [
+      {
+        "root": ".",
+        "name": "fixture-type-only",
+        "tsconfig": "tsconfig.json",
+        "sideEffectsFree": true,
+        "publicEntrypoints": []
+      }
+    ]
+  },
+  "summary": {
+    "filesAnalyzed": 3,
+    "packages": 1,
+    "modules": 3,
+    "edges": 3,
+    "externalPackages": 0,
+    "unresolvedSpecifiers": 0,
+    "parseFailures": 0,
+    "cycles": 0,
+    "deadExports": 2,
+    "classifiedBarrels": 0,
+    "importedBarrels": 0
+  },
+  "timings": {
+    "discoveryMs": 0,
+    "parseMs": 0,
+    "resolveMs": 0,
+    "totalMs": 0
+  },
+  "includeTypeEdges": false,
+  "externalPackages": [],
+  "modules": [
+    {
+      "id": "m0",
+      "path": "src/helper.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    },
+    {
+      "id": "m1",
+      "path": "src/main.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    },
+    {
+      "id": "m2",
+      "path": "src/types.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "m1",
+      "target": "m0",
+      "kind": "static"
+    },
+    {
+      "source": "m1",
+      "target": "m2",
+      "kind": "static"
+    },
+    {
+      "source": "m1",
+      "target": "m2",
+      "kind": "typeOnly"
+    }
+  ],
+  "danglingEdges": [],
+  "unresolvedSpecifiers": [],
+  "parseFailures": [],
+  "cycles": [],
+  "deadExports": [
+    {
+      "module": "src/main.ts",
+      "name": "role",
+      "lowConfidence": false
+    },
+    {
+      "module": "src/main.ts",
+      "name": "value",
+      "lowConfidence": false
+    }
+  ],
+  "fan": {
+    "fanIn": [
+      {
+        "path": "src/helper.ts",
+        "direct": 1,
+        "transitive": 1
+      },
+      {
+        "path": "src/types.ts",
+        "direct": 1,
+        "transitive": 1
+      }
+    ],
+    "fanOut": [
+      {
+        "path": "src/main.ts",
+        "direct": 2,
+        "transitive": 2
+      }
+    ]
+  },
+  "amplification": {
+    "classifiedBarrels": 0,
+    "sites": [],
+    "barrels": [],
+    "entrypoints": [],
+    "skippedByReason": []
+  }
+}

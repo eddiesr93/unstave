@@ -1,0 +1,268 @@
+---
+source: crates/unstave-report/tests/report_renderers.rs
+expression: rendered
+---
+{
+  "schemaVersion": 1,
+  "workspace": {
+    "root": ".",
+    "kind": "single",
+    "packages": [
+      {
+        "root": ".",
+        "name": "fixture-nested-barrels",
+        "tsconfig": null,
+        "sideEffectsFree": false,
+        "publicEntrypoints": []
+      }
+    ]
+  },
+  "summary": {
+    "filesAnalyzed": 7,
+    "packages": 1,
+    "modules": 7,
+    "edges": 6,
+    "externalPackages": 0,
+    "unresolvedSpecifiers": 0,
+    "parseFailures": 0,
+    "cycles": 0,
+    "deadExports": 3,
+    "classifiedBarrels": 3,
+    "importedBarrels": 1
+  },
+  "timings": {
+    "discoveryMs": 0,
+    "parseMs": 0,
+    "resolveMs": 0,
+    "totalMs": 0
+  },
+  "includeTypeEdges": false,
+  "externalPackages": [],
+  "modules": [
+    {
+      "id": "m0",
+      "path": "src/a/b/c/index.ts",
+      "directory": "src/a/b/c",
+      "hasSideEffects": false,
+      "barrel": {
+        "kind": "pure",
+        "exportCount": 3,
+        "reexportCount": 3,
+        "ownDeclCount": 0,
+        "reexportRatio": 1.0
+      },
+      "inCycle": false
+    },
+    {
+      "id": "m1",
+      "path": "src/a/b/c/one.ts",
+      "directory": "src/a/b/c",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    },
+    {
+      "id": "m2",
+      "path": "src/a/b/c/three.ts",
+      "directory": "src/a/b/c",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    },
+    {
+      "id": "m3",
+      "path": "src/a/b/c/two.ts",
+      "directory": "src/a/b/c",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    },
+    {
+      "id": "m4",
+      "path": "src/a/b/index.ts",
+      "directory": "src/a/b",
+      "hasSideEffects": false,
+      "barrel": {
+        "kind": "pure",
+        "exportCount": 1,
+        "reexportCount": 1,
+        "ownDeclCount": 0,
+        "reexportRatio": 1.0
+      },
+      "inCycle": false
+    },
+    {
+      "id": "m5",
+      "path": "src/a/index.ts",
+      "directory": "src/a",
+      "hasSideEffects": false,
+      "barrel": {
+        "kind": "pure",
+        "exportCount": 1,
+        "reexportCount": 1,
+        "ownDeclCount": 0,
+        "reexportRatio": 1.0
+      },
+      "inCycle": false
+    },
+    {
+      "id": "m6",
+      "path": "src/main.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "m0",
+      "target": "m1",
+      "kind": "reExport"
+    },
+    {
+      "source": "m0",
+      "target": "m2",
+      "kind": "reExport"
+    },
+    {
+      "source": "m0",
+      "target": "m3",
+      "kind": "reExport"
+    },
+    {
+      "source": "m4",
+      "target": "m0",
+      "kind": "reExport"
+    },
+    {
+      "source": "m5",
+      "target": "m4",
+      "kind": "reExport"
+    },
+    {
+      "source": "m6",
+      "target": "m5",
+      "kind": "static"
+    }
+  ],
+  "danglingEdges": [],
+  "unresolvedSpecifiers": [],
+  "parseFailures": [],
+  "cycles": [],
+  "deadExports": [
+    {
+      "module": "src/a/b/c/three.ts",
+      "name": "three",
+      "lowConfidence": true
+    },
+    {
+      "module": "src/a/b/c/two.ts",
+      "name": "two",
+      "lowConfidence": true
+    },
+    {
+      "module": "src/main.ts",
+      "name": "used",
+      "lowConfidence": false
+    }
+  ],
+  "fan": {
+    "fanIn": [
+      {
+        "path": "src/a/b/c/one.ts",
+        "direct": 1,
+        "transitive": 4
+      },
+      {
+        "path": "src/a/b/c/three.ts",
+        "direct": 1,
+        "transitive": 4
+      },
+      {
+        "path": "src/a/b/c/two.ts",
+        "direct": 1,
+        "transitive": 4
+      },
+      {
+        "path": "src/a/b/c/index.ts",
+        "direct": 1,
+        "transitive": 3
+      },
+      {
+        "path": "src/a/b/index.ts",
+        "direct": 1,
+        "transitive": 2
+      },
+      {
+        "path": "src/a/index.ts",
+        "direct": 1,
+        "transitive": 1
+      }
+    ],
+    "fanOut": [
+      {
+        "path": "src/main.ts",
+        "direct": 1,
+        "transitive": 6
+      },
+      {
+        "path": "src/a/index.ts",
+        "direct": 1,
+        "transitive": 5
+      },
+      {
+        "path": "src/a/b/index.ts",
+        "direct": 1,
+        "transitive": 4
+      },
+      {
+        "path": "src/a/b/c/index.ts",
+        "direct": 3,
+        "transitive": 3
+      }
+    ]
+  },
+  "amplification": {
+    "classifiedBarrels": 3,
+    "sites": [
+      {
+        "importer": "src/main.ts",
+        "barrel": "src/a/index.ts",
+        "span": {
+          "start": 0,
+          "end": 26
+        },
+        "symbols": [
+          "one"
+        ],
+        "actualCost": 6,
+        "minimalCost": 1,
+        "excess": 5,
+        "amplification": 6.0,
+        "rewritable": [
+          {
+            "symbol": "one",
+            "definition": "src/a/b/c/one.ts"
+          }
+        ],
+        "skipped": []
+      }
+    ],
+    "barrels": [
+      {
+        "barrel": "src/a/index.ts",
+        "importSites": 1,
+        "actualCost": 6,
+        "worstExcess": 5,
+        "totalExcess": 5,
+        "maxAmplification": 6.0,
+        "hasSideEffects": false,
+        "rewritableSymbols": 1,
+        "skippedSymbols": 0
+      }
+    ],
+    "entrypoints": [],
+    "skippedByReason": []
+  }
+}

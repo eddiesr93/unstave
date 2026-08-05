@@ -30,10 +30,11 @@ cargo install --path crates/unstave-cli
 
 ```bash
 unstave analyze --format terminal
+unstave analyze --format json --format html --out .unstave
 ```
 
 ```
-unstave analyze [--format terminal|json|dot|mermaid|html]... [--out <dir>]
+unstave analyze [--format terminal|json|dot|mermaid|html]... [--out <dir>] [--max-nodes <n>]
 unstave barrels [--min-amplification <f>]
 unstave cycles
 unstave dead-exports
@@ -41,6 +42,13 @@ unstave fix [--barrel <path>] [--only <glob>] [--write|--check]
 ```
 
 Global flags: `--config <path>`, `--root <path>`, `--no-cache`, `-v/-vv`.
+
+Non-terminal formats are written as `unstave-report.json`, `.dot`, `.mmd`, and
+`.html`. The default directory is `<root>/.unstave`; `--out` overrides it. JSON is
+complete and versioned with `schemaVersion: 1`. The HTML report is a single portable
+file with no CDN or runtime network dependency. DOT and Mermaid group modules by
+directory and collapse large graphs to at most `--max-nodes` directory nodes
+(default: 150).
 
 ## Configuration
 

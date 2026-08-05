@@ -1,0 +1,164 @@
+---
+source: crates/unstave-report/tests/report_renderers.rs
+expression: rendered
+---
+{
+  "schemaVersion": 1,
+  "workspace": {
+    "root": ".",
+    "kind": "pnpm",
+    "packages": [
+      {
+        "root": ".",
+        "name": "fixture-monorepo",
+        "tsconfig": null,
+        "sideEffectsFree": false,
+        "publicEntrypoints": []
+      },
+      {
+        "root": "apps/web",
+        "name": "@fixture/web",
+        "tsconfig": null,
+        "sideEffectsFree": false,
+        "publicEntrypoints": []
+      },
+      {
+        "root": "packages/ui",
+        "name": "@fixture/ui",
+        "tsconfig": "packages/ui/tsconfig.json",
+        "sideEffectsFree": false,
+        "publicEntrypoints": [
+          "packages/ui/src/index.ts"
+        ]
+      },
+      {
+        "root": "packages/utils",
+        "name": "@fixture/utils",
+        "tsconfig": null,
+        "sideEffectsFree": true,
+        "publicEntrypoints": []
+      }
+    ]
+  },
+  "summary": {
+    "filesAnalyzed": 4,
+    "packages": 4,
+    "modules": 4,
+    "edges": 3,
+    "externalPackages": 0,
+    "unresolvedSpecifiers": 0,
+    "parseFailures": 0,
+    "cycles": 0,
+    "deadExports": 1,
+    "classifiedBarrels": 0,
+    "importedBarrels": 0
+  },
+  "timings": {
+    "discoveryMs": 0,
+    "parseMs": 0,
+    "resolveMs": 0,
+    "totalMs": 0
+  },
+  "includeTypeEdges": false,
+  "externalPackages": [],
+  "modules": [
+    {
+      "id": "m0",
+      "path": "apps/web/src/main.ts",
+      "directory": "apps/web/src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    },
+    {
+      "id": "m1",
+      "path": "packages/ui/src/index.ts",
+      "directory": "packages/ui/src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    },
+    {
+      "id": "m2",
+      "path": "packages/ui/src/theme.ts",
+      "directory": "packages/ui/src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    },
+    {
+      "id": "m3",
+      "path": "packages/utils/src/index.ts",
+      "directory": "packages/utils/src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "m0",
+      "target": "m1",
+      "kind": "static"
+    },
+    {
+      "source": "m1",
+      "target": "m2",
+      "kind": "static"
+    },
+    {
+      "source": "m1",
+      "target": "m3",
+      "kind": "static"
+    }
+  ],
+  "danglingEdges": [],
+  "unresolvedSpecifiers": [],
+  "parseFailures": [],
+  "cycles": [],
+  "deadExports": [
+    {
+      "module": "apps/web/src/main.ts",
+      "name": "app",
+      "lowConfidence": false
+    }
+  ],
+  "fan": {
+    "fanIn": [
+      {
+        "path": "packages/ui/src/theme.ts",
+        "direct": 1,
+        "transitive": 2
+      },
+      {
+        "path": "packages/utils/src/index.ts",
+        "direct": 1,
+        "transitive": 2
+      },
+      {
+        "path": "packages/ui/src/index.ts",
+        "direct": 1,
+        "transitive": 1
+      }
+    ],
+    "fanOut": [
+      {
+        "path": "apps/web/src/main.ts",
+        "direct": 1,
+        "transitive": 3
+      },
+      {
+        "path": "packages/ui/src/index.ts",
+        "direct": 2,
+        "transitive": 2
+      }
+    ]
+  },
+  "amplification": {
+    "classifiedBarrels": 0,
+    "sites": [],
+    "barrels": [],
+    "entrypoints": [],
+    "skippedByReason": []
+  }
+}

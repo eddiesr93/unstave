@@ -1,0 +1,119 @@
+---
+source: crates/unstave-report/tests/report_renderers.rs
+expression: rendered
+---
+{
+  "schemaVersion": 1,
+  "workspace": {
+    "root": ".",
+    "kind": "single",
+    "packages": [
+      {
+        "root": ".",
+        "name": "fixture-unresolved",
+        "tsconfig": null,
+        "sideEffectsFree": false,
+        "publicEntrypoints": []
+      }
+    ]
+  },
+  "summary": {
+    "filesAnalyzed": 2,
+    "packages": 1,
+    "modules": 2,
+    "edges": 1,
+    "externalPackages": 0,
+    "unresolvedSpecifiers": 2,
+    "parseFailures": 0,
+    "cycles": 0,
+    "deadExports": 1,
+    "classifiedBarrels": 0,
+    "importedBarrels": 0
+  },
+  "timings": {
+    "discoveryMs": 0,
+    "parseMs": 0,
+    "resolveMs": 0,
+    "totalMs": 0
+  },
+  "includeTypeEdges": false,
+  "externalPackages": [],
+  "modules": [
+    {
+      "id": "m0",
+      "path": "src/main.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    },
+    {
+      "id": "m1",
+      "path": "src/real.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "m0",
+      "target": "m1",
+      "kind": "static"
+    }
+  ],
+  "danglingEdges": [],
+  "unresolvedSpecifiers": [
+    {
+      "specifier": "./does-not-exist",
+      "importer": "src/main.ts",
+      "span": {
+        "start": 31,
+        "end": 72
+      },
+      "reason": "Cannot find module './does-not-exist'"
+    },
+    {
+      "specifier": "some-uninstalled-package",
+      "importer": "src/main.ts",
+      "span": {
+        "start": 73,
+        "end": 120
+      },
+      "reason": "Cannot find module 'some-uninstalled-package'"
+    }
+  ],
+  "parseFailures": [],
+  "cycles": [],
+  "deadExports": [
+    {
+      "module": "src/main.ts",
+      "name": "all",
+      "lowConfidence": false
+    }
+  ],
+  "fan": {
+    "fanIn": [
+      {
+        "path": "src/real.ts",
+        "direct": 1,
+        "transitive": 1
+      }
+    ],
+    "fanOut": [
+      {
+        "path": "src/main.ts",
+        "direct": 1,
+        "transitive": 1
+      }
+    ]
+  },
+  "amplification": {
+    "classifiedBarrels": 0,
+    "sites": [],
+    "barrels": [],
+    "entrypoints": [],
+    "skippedByReason": []
+  }
+}

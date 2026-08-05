@@ -1,0 +1,246 @@
+---
+source: crates/unstave-report/tests/report_renderers.rs
+expression: rendered
+---
+{
+  "schemaVersion": 1,
+  "workspace": {
+    "root": ".",
+    "kind": "single",
+    "packages": [
+      {
+        "root": ".",
+        "name": "fixture-cycles",
+        "tsconfig": null,
+        "sideEffectsFree": false,
+        "publicEntrypoints": []
+      }
+    ]
+  },
+  "summary": {
+    "filesAnalyzed": 7,
+    "packages": 1,
+    "modules": 7,
+    "edges": 7,
+    "externalPackages": 0,
+    "unresolvedSpecifiers": 0,
+    "parseFailures": 0,
+    "cycles": 2,
+    "deadExports": 1,
+    "classifiedBarrels": 0,
+    "importedBarrels": 0
+  },
+  "timings": {
+    "discoveryMs": 0,
+    "parseMs": 0,
+    "resolveMs": 0,
+    "totalMs": 0
+  },
+  "includeTypeEdges": false,
+  "externalPackages": [],
+  "modules": [
+    {
+      "id": "m0",
+      "path": "src/a.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": true
+    },
+    {
+      "id": "m1",
+      "path": "src/b.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": true
+    },
+    {
+      "id": "m2",
+      "path": "src/standalone.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": false
+    },
+    {
+      "id": "m3",
+      "path": "src/w.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": true
+    },
+    {
+      "id": "m4",
+      "path": "src/x.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": true
+    },
+    {
+      "id": "m5",
+      "path": "src/y.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": true
+    },
+    {
+      "id": "m6",
+      "path": "src/z.ts",
+      "directory": "src",
+      "hasSideEffects": false,
+      "barrel": null,
+      "inCycle": true
+    }
+  ],
+  "edges": [
+    {
+      "source": "m0",
+      "target": "m1",
+      "kind": "static"
+    },
+    {
+      "source": "m1",
+      "target": "m0",
+      "kind": "static"
+    },
+    {
+      "source": "m3",
+      "target": "m4",
+      "kind": "static"
+    },
+    {
+      "source": "m4",
+      "target": "m5",
+      "kind": "static"
+    },
+    {
+      "source": "m4",
+      "target": "m6",
+      "kind": "static"
+    },
+    {
+      "source": "m5",
+      "target": "m6",
+      "kind": "static"
+    },
+    {
+      "source": "m6",
+      "target": "m3",
+      "kind": "static"
+    }
+  ],
+  "danglingEdges": [],
+  "unresolvedSpecifiers": [],
+  "parseFailures": [],
+  "cycles": [
+    {
+      "members": [
+        "src/w.ts",
+        "src/x.ts",
+        "src/y.ts",
+        "src/z.ts"
+      ],
+      "shortestPath": [
+        "src/w.ts",
+        "src/x.ts",
+        "src/z.ts",
+        "src/w.ts"
+      ]
+    },
+    {
+      "members": [
+        "src/a.ts",
+        "src/b.ts"
+      ],
+      "shortestPath": [
+        "src/a.ts",
+        "src/b.ts",
+        "src/a.ts"
+      ]
+    }
+  ],
+  "deadExports": [
+    {
+      "module": "src/standalone.ts",
+      "name": "standalone",
+      "lowConfidence": false
+    }
+  ],
+  "fan": {
+    "fanIn": [
+      {
+        "path": "src/z.ts",
+        "direct": 2,
+        "transitive": 4
+      },
+      {
+        "path": "src/w.ts",
+        "direct": 1,
+        "transitive": 4
+      },
+      {
+        "path": "src/x.ts",
+        "direct": 1,
+        "transitive": 4
+      },
+      {
+        "path": "src/y.ts",
+        "direct": 1,
+        "transitive": 4
+      },
+      {
+        "path": "src/a.ts",
+        "direct": 1,
+        "transitive": 2
+      },
+      {
+        "path": "src/b.ts",
+        "direct": 1,
+        "transitive": 2
+      }
+    ],
+    "fanOut": [
+      {
+        "path": "src/x.ts",
+        "direct": 2,
+        "transitive": 4
+      },
+      {
+        "path": "src/w.ts",
+        "direct": 1,
+        "transitive": 4
+      },
+      {
+        "path": "src/y.ts",
+        "direct": 1,
+        "transitive": 4
+      },
+      {
+        "path": "src/z.ts",
+        "direct": 1,
+        "transitive": 4
+      },
+      {
+        "path": "src/a.ts",
+        "direct": 1,
+        "transitive": 2
+      },
+      {
+        "path": "src/b.ts",
+        "direct": 1,
+        "transitive": 2
+      }
+    ]
+  },
+  "amplification": {
+    "classifiedBarrels": 0,
+    "sites": [],
+    "barrels": [],
+    "entrypoints": [],
+    "skippedByReason": []
+  }
+}

@@ -4,10 +4,10 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 use clap::{Args, Parser, Subcommand};
 use unstave_core::analysis::symbols::SymbolResolver;
-use unstave_core::analysis::{amplification, barrel, cycles, fan};
+use unstave_core::analysis::{amplification, barrel, cycles};
 use unstave_core::graph::ModuleGraph;
 use unstave_core::{analyze, Config};
-use unstave_report::{terminal, RenderOptions};
+use unstave_report::{dot, html, json, mermaid, terminal, RenderOptions};
 
 #[derive(Parser)]
 #[command(
@@ -75,6 +75,10 @@ struct AnalyzeArgs {
     /// Include type-only edges in runtime-cost analyses.
     #[arg(long)]
     include_type_edges: bool,
+
+    /// Maximum graph nodes before DOT/Mermaid collapse directories.
+    #[arg(long, value_name = "N", default_value_t = 150, value_parser = parse_positive_usize)]
+    max_nodes: usize,
 }
 
 #[derive(Args)]
@@ -106,13 +110,25 @@ enum Format {
     Html,
 }
 
+impl Format {
+    fn file_name(self) -> &'static str {
+        match self {
+            Format::Terminal => "",
+            Format::Json => "unstave-report.json",
+            Format::Dot => "unstave-report.dot",
+            Format::Mermaid => "unstave-report.mmd",
+            Format::Html => "unstave-report.html",
+        }
+    }
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
     match &cli.command {
         Command::Analyze(args) => run_analyze(&cli.global, args),
         Command::Barrels { min_amplification } => run_barrels(&cli.global, *min_amplification),
         Command::Cycles => run_cycles(&cli.global),
-        Command::DeadExports => not_yet("dead-exports", "M5"),
+        Command::DeadExports => run_dead_exports(&cli.global),
         Command::Fix(_) => not_yet("fix", "M6"),
         Command::Cache(CacheCommand::Clear) => not_yet("cache clear", "M8"),
     }
@@ -120,32 +136,51 @@ fn main() -> Result<()> {
 
 fn run_analyze(global: &GlobalArgs, args: &AnalyzeArgs) -> Result<()> {
     let loaded = load(global)?;
-    let analysis = &loaded.analysis;
+    let report = unstave_report::build_report(
+        &loaded.analysis,
+        &loaded.graph,
+        &loaded.config,
+        args.include_type_edges,
+    );
+    let formats = dedup_formats(&args.format);
+    let output_directory = formats
+        .iter()
+        .any(|format| *format != Format::Terminal)
+        .then(|| {
+            args.out
+                .clone()
+                .unwrap_or_else(|| loaded.analysis.workspace.root.join(".unstave"))
+        });
 
-    for format in dedup_formats(&args.format) {
+    if let Some(directory) = &output_directory {
+        std::fs::create_dir_all(directory)
+            .with_context(|| format!("creating output directory {}", directory.display()))?;
+    }
+
+    for format in formats {
         match format {
             Format::Terminal => {
                 let opts = RenderOptions {
                     color: use_color(),
                     max_rows: 0,
                 };
-                print!("{}", terminal::render(analysis, &opts));
-
-                let found = cycles::find(&loaded.graph, args.include_type_edges);
-                let fan = fan::compute(&loaded.graph, args.include_type_edges, FAN_LIMIT);
-                print!(
-                    "{}",
-                    terminal::render_graph(analysis, &loaded.graph, &found, &fan, &opts)
-                );
-
-                let report = amplification_report(&loaded, args.include_type_edges);
-                print!(
-                    "{}",
-                    terminal::render_barrels(analysis, &report, None, &opts)
-                );
+                print!("{}", terminal::render_report(&report, &opts));
             }
             Format::Json | Format::Dot | Format::Mermaid | Format::Html => {
-                return not_yet("this --format", "M5");
+                let contents = match format {
+                    Format::Json => json::render(&report).context("serializing JSON report")?,
+                    Format::Dot => dot::render(&report, args.max_nodes),
+                    Format::Mermaid => mermaid::render(&report, args.max_nodes),
+                    Format::Html => html::render(&report).context("serializing HTML report")?,
+                    Format::Terminal => unreachable!("terminal handled above"),
+                };
+                let directory = output_directory
+                    .as_ref()
+                    .context("non-terminal format has no output directory")?;
+                let path = directory.join(format.file_name());
+                std::fs::write(&path, contents)
+                    .with_context(|| format!("writing {}", path.display()))?;
+                eprintln!("wrote {}", path.display());
             }
         }
     }
@@ -153,7 +188,8 @@ fn run_analyze(global: &GlobalArgs, args: &AnalyzeArgs) -> Result<()> {
     if global.verbose > 0 {
         eprintln!(
             "packages: {}",
-            analysis
+            loaded
+                .analysis
                 .workspace
                 .packages
                 .iter()
@@ -165,9 +201,6 @@ fn run_analyze(global: &GlobalArgs, args: &AnalyzeArgs) -> Result<()> {
 
     Ok(())
 }
-
-/// Modules ranked per fan-in/fan-out table.
-const FAN_LIMIT: usize = 20;
 
 /// Shared setup for the graph-level commands.
 struct Loaded {
@@ -246,6 +279,21 @@ fn run_cycles(global: &GlobalArgs) -> Result<()> {
     Ok(())
 }
 
+fn run_dead_exports(global: &GlobalArgs) -> Result<()> {
+    let loaded = load(global)?;
+    let report =
+        unstave_report::build_report(&loaded.analysis, &loaded.graph, &loaded.config, false);
+    let opts = RenderOptions {
+        color: use_color(),
+        max_rows: 0,
+    };
+    print!(
+        "{}",
+        terminal::render_dead_exports(&report.dead_exports, &opts, 0)
+    );
+    Ok(())
+}
+
 /// Preserve the order the user gave, but render each format once.
 fn dedup_formats(formats: &[Format]) -> Vec<Format> {
     let mut seen = Vec::new();
@@ -255,6 +303,17 @@ fn dedup_formats(formats: &[Format]) -> Vec<Format> {
         }
     }
     seen
+}
+
+fn parse_positive_usize(value: &str) -> std::result::Result<usize, String> {
+    let parsed = value
+        .parse::<usize>()
+        .map_err(|_| format!("`{value}` is not a positive integer"))?;
+    if parsed == 0 {
+        Err("value must be at least 1".to_string())
+    } else {
+        Ok(parsed)
+    }
 }
 
 fn use_color() -> bool {

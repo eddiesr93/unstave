@@ -1,9 +1,18 @@
 //! Renderers for [`unstave_core`] analysis results.
 //!
-//! Every renderer takes a borrowed analysis and returns a `String`. Nothing here
-//! writes to stdout — that is the CLI's job.
+//! Every renderer takes a borrowed [`AnalysisReport`]. Nothing here writes to stdout
+//! or chooses output paths — that is the CLI's job.
 
+pub mod dot;
+pub mod html;
+pub mod json;
+pub mod mermaid;
+pub mod report;
 pub mod terminal;
+
+mod visualization;
+
+pub use report::{build as build_report, AnalysisReport};
 
 use owo_colors::OwoColorize;
 

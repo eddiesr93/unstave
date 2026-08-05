@@ -134,6 +134,15 @@ fn detects_workspace_packages_and_cross_package_imports() {
         .expect("utils package");
     assert!(utils.side_effects_false);
 
+    let ui = analysis
+        .workspace
+        .packages
+        .iter()
+        .find(|p| p.name.as_deref() == Some("@fixture/ui"))
+        .expect("ui package");
+    assert_eq!(ui.public_entrypoints.len(), 1);
+    assert!(ui.public_entrypoints[0].ends_with("packages/ui/src/index.ts"));
+
     // A cross-package import through node_modules resolves back into the workspace,
     // so it must be Internal — not External — or the graph would stop at the boundary.
     let web = analysis

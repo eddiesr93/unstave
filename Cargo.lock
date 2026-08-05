@@ -1420,6 +1420,7 @@ dependencies = [
  "comfy-table",
  "insta",
  "owo-colors",
+ "petgraph",
  "serde",
  "serde_json",
  "unstave-core",
