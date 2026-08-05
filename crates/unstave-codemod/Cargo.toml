@@ -1,6 +1,6 @@
 [package]
-name = "unstave-cli"
-description = "CLI for unstave: module graph analyzer and barrel codemod for TypeScript monorepos."
+name = "unstave-codemod"
+description = "Span-based barrel import rewriting for unstave."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -11,15 +11,14 @@ keywords.workspace = true
 categories.workspace = true
 rust-version.workspace = true
 
-[[bin]]
-name = "unstave"
-path = "src/main.rs"
-
 [dependencies]
 unstave-core.workspace = true
-unstave-report.workspace = true
-unstave-codemod.workspace = true
-anyhow.workspace = true
-clap.workspace = true
+thiserror.workspace = true
+serde.workspace = true
 serde_json.workspace = true
-owo-colors.workspace = true
+globset.workspace = true
+similar.workspace = true
+json-strip-comments.workspace = true
+
+[dev-dependencies]
+insta.workspace = true

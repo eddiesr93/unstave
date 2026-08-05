@@ -1385,8 +1385,23 @@ dependencies = [
  "clap",
  "owo-colors",
  "serde_json",
+ "unstave-codemod",
  "unstave-core",
  "unstave-report",
+]
+
+[[package]]
+name = "unstave-codemod"
+version = "0.1.0"
+dependencies = [
+ "globset",
+ "insta",
+ "json-strip-comments",
+ "serde",
+ "serde_json",
+ "similar",
+ "thiserror",
+ "unstave-core",
 ]
 
 [[package]]

@@ -5,6 +5,7 @@ use anyhow::{Context, Result};
 use clap::{Args, Parser, Subcommand};
 use unstave_core::analysis::symbols::SymbolResolver;
 use unstave_core::analysis::{amplification, barrel, cycles};
+use unstave_core::config::ImportStyle;
 use unstave_core::graph::ModuleGraph;
 use unstave_core::{analyze, Config};
 use unstave_report::{dot, html, json, mermaid, terminal, RenderOptions};
@@ -87,12 +88,34 @@ struct FixArgs {
     barrel: Option<PathBuf>,
     #[arg(long, value_name = "GLOB")]
     only: Option<String>,
-    #[arg(long)]
+    /// Print a unified diff without changing files (the default).
+    #[arg(long, conflicts_with_all = ["write", "check"])]
+    dry_run: bool,
+    /// Apply rewrites to source files.
+    #[arg(long, conflicts_with_all = ["dry_run", "check"])]
     write: bool,
-    #[arg(long)]
+    /// Exit 1 when rewrites would be made, without changing files.
+    #[arg(long, conflicts_with_all = ["dry_run", "write"])]
     check: bool,
-    #[arg(long, value_name = "STYLE")]
-    import_style: Option<String>,
+    #[arg(long, value_name = "STYLE", value_enum)]
+    import_style: Option<ImportStyleArg>,
+}
+
+#[derive(Clone, Copy, clap::ValueEnum)]
+enum ImportStyleArg {
+    Alias,
+    Relative,
+    Preserve,
+}
+
+impl From<ImportStyleArg> for ImportStyle {
+    fn from(value: ImportStyleArg) -> Self {
+        match value {
+            ImportStyleArg::Alias => ImportStyle::Alias,
+            ImportStyleArg::Relative => ImportStyle::Relative,
+            ImportStyleArg::Preserve => ImportStyle::Preserve,
+        }
+    }
 }
 
 #[derive(Subcommand)]
@@ -129,7 +152,7 @@ fn main() -> Result<()> {
         Command::Barrels { min_amplification } => run_barrels(&cli.global, *min_amplification),
         Command::Cycles => run_cycles(&cli.global),
         Command::DeadExports => run_dead_exports(&cli.global),
-        Command::Fix(_) => not_yet("fix", "M6"),
+        Command::Fix(args) => run_fix(&cli.global, args),
         Command::Cache(CacheCommand::Clear) => not_yet("cache clear", "M8"),
     }
 }
@@ -292,6 +315,78 @@ fn run_dead_exports(global: &GlobalArgs) -> Result<()> {
         terminal::render_dead_exports(&report.dead_exports, &opts, 0)
     );
     Ok(())
+}
+
+fn run_fix(global: &GlobalArgs, args: &FixArgs) -> Result<()> {
+    let loaded = load(global)?;
+    let options = unstave_codemod::CodemodOptions {
+        import_style: args
+            .import_style
+            .map(ImportStyle::from)
+            .unwrap_or(loaded.config.codemod.import_style),
+        only: args.only.clone(),
+        barrel: args.barrel.clone(),
+    };
+    let plan = unstave_codemod::plan(&loaded.analysis, &loaded.graph, &loaded.config, &options)
+        .context("planning barrel import rewrites")?;
+    if args.write {
+        for change in &plan.files {
+            std::fs::write(&change.path, &change.rewritten)
+                .with_context(|| format!("writing {}", change.path.display()))?;
+        }
+        print!(
+            "{}",
+            fix_summary(
+                &plan,
+                &format!(
+                    "{} file(s) changed, {} import(s) rewritten",
+                    plan.files_changed(),
+                    plan.imports_rewritten
+                )
+            )
+        );
+        return Ok(());
+    }
+    if args.check {
+        if plan.files_changed() > 0 {
+            anyhow::bail!(fix_summary(
+                &plan,
+                &format!(
+                    "{} file(s) would change, {} import(s) would be rewritten",
+                    plan.files_changed(),
+                    plan.imports_rewritten
+                )
+            ));
+        }
+        eprint!("{}", fix_summary(&plan, "0 files would change"));
+        return Ok(());
+    }
+    let _explicit_dry_run = args.dry_run;
+    print!("{}", plan.unified_diff(&loaded.analysis.workspace.root));
+    eprint!(
+        "{}",
+        fix_summary(
+            &plan,
+            &format!(
+                "{} file(s) would change, {} import(s) would be rewritten",
+                plan.files_changed(),
+                plan.imports_rewritten
+            )
+        )
+    );
+    Ok(())
+}
+
+fn fix_summary(plan: &unstave_codemod::CodemodPlan, headline: &str) -> String {
+    let mut summary = format!("{headline}\n");
+    for skipped in &plan.skipped {
+        summary.push_str(&format!(
+            "  {}: {}\n",
+            skipped.reason.label(),
+            skipped.imports
+        ));
+    }
+    summary
 }
 
 /// Preserve the order the user gave, but render each format once.

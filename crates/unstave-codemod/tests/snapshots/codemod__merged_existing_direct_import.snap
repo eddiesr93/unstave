@@ -1,0 +1,9 @@
+---
+source: crates/unstave-codemod/tests/codemod.rs
+expression: "result.files[0].rewritten"
+---
+// direct import stays in this position
+import { helper, Widget as LocalWidget } from './widget';
+
+
+export const values = [helper, LocalWidget];

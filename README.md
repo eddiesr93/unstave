@@ -38,7 +38,8 @@ unstave analyze [--format terminal|json|dot|mermaid|html]... [--out <dir>] [--ma
 unstave barrels [--min-amplification <f>]
 unstave cycles
 unstave dead-exports
-unstave fix [--barrel <path>] [--only <glob>] [--write|--check]
+unstave fix [--barrel <path>] [--only <glob>] [--import-style alias|relative|preserve]
+            [--dry-run|--write|--check]
 ```
 
 Global flags: `--config <path>`, `--root <path>`, `--no-cache`, `-v/-vv`.
@@ -49,6 +50,25 @@ complete and versioned with `schemaVersion: 1`. The HTML report is a single port
 file with no CDN or runtime network dependency. DOT and Mermaid group modules by
 directory and collapse large graphs to at most `--max-nodes` directory nodes
 (default: 150).
+
+`unstave fix` is conservative and dry-runs by default: it prints a unified diff and
+does not touch source files. Use `--write` to apply the same plan, or `--check` in CI
+to exit with status 1 when a rewrite is needed. `--only` limits importers by a
+workspace-relative glob, while `--barrel` limits rewrites to one barrel. Imports
+that cannot be resolved unambiguously, namespace imports, cyclic/external
+re-exports, and barrels with observed side effects are left byte-identical and
+reported by reason.
+
+```bash
+# Preview every safe rewrite.
+unstave fix --root .
+
+# Rewrite one barrel in application sources, keeping the predominant path style.
+unstave fix --root . --barrel src/clients/index.ts --only 'src/app/**' --write
+
+# Fail CI if source files are not yet direct-imported.
+unstave fix --root . --check
+```
 
 ## Configuration
 
@@ -74,6 +94,7 @@ import_style = "preserve"
 |---|---|
 | `unstave-core` | Discovery, parsing, graph construction, analyses. A library — no I/O policy, no printing. |
 | `unstave-report` | Terminal, JSON, DOT, Mermaid and HTML renderers. |
+| `unstave-codemod` | Span-based, byte-preserving plans for safe barrel-import rewrites. |
 | `unstave-cli` | The `unstave` binary. |
 
 ## Development

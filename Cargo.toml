@@ -1,6 +1,11 @@
 [workspace]
 resolver = "2"
-members = ["crates/unstave-core", "crates/unstave-report", "crates/unstave-cli"]
+members = [
+    "crates/unstave-core",
+    "crates/unstave-report",
+    "crates/unstave-codemod",
+    "crates/unstave-cli",
+]
 
 [workspace.package]
 version = "0.1.0"
@@ -16,6 +21,7 @@ rust-version = "1.82"
 [workspace.dependencies]
 unstave-core = { path = "crates/unstave-core", version = "0.1.0" }
 unstave-report = { path = "crates/unstave-report", version = "0.1.0" }
+unstave-codemod = { path = "crates/unstave-codemod", version = "0.1.0" }
 
 # oxc crates release in lockstep — keep this single version pinned across the workspace.
 oxc_allocator = "=0.143.0"
@@ -41,6 +47,8 @@ toml = "0.8"
 globset = "0.4"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
 insta = { version = "1", features = ["json", "filters"] }
+similar = "2.7"
+json-strip-comments = "3.1"
 
 [profile.release]
 lto = "thin"

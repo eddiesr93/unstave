@@ -1,0 +1,9 @@
+---
+source: crates/unstave-codemod/tests/codemod.rs
+expression: "result.files[0].rewritten"
+---
+// keep this exact header
+import type { User, Role as LocalRole } from './types';
+import DefaultWidget, { Widget as LocalWidget } from './widget';
+
+export const values: [typeof DefaultWidget, LocalWidget, User, LocalRole] | null = null;
