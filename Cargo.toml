@@ -4,6 +4,7 @@ members = [
     "crates/unstave-core",
     "crates/unstave-report",
     "crates/unstave-codemod",
+    "crates/unstave-napi",
     "crates/unstave-cli",
 ]
 
@@ -22,6 +23,7 @@ rust-version = "1.82"
 unstave-core = { path = "crates/unstave-core", version = "0.1.0" }
 unstave-report = { path = "crates/unstave-report", version = "0.1.0" }
 unstave-codemod = { path = "crates/unstave-codemod", version = "0.1.0" }
+unstave-napi = { path = "crates/unstave-napi", version = "0.1.0" }
 
 # oxc crates release in lockstep — keep this single version pinned across the workspace.
 oxc_allocator = "=0.143.0"
@@ -49,6 +51,9 @@ xxhash-rust = { version = "0.8", features = ["xxh3"] }
 insta = { version = "1", features = ["json", "filters"] }
 similar = "2.7"
 json-strip-comments = "3.1"
+napi = { version = "3.12.0", default-features = false, features = ["napi6", "async", "serde-json", "dyn-symbols"] }
+napi-derive = "3.6.2"
+napi-build = "2.4.0"
 
 [profile.release]
 lto = "thin"

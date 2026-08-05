@@ -1,0 +1,28 @@
+{
+  "name": "unstave",
+  "version": "0.1.0",
+  "description": "Native module-graph analysis for TypeScript and React workspaces",
+  "license": "MIT",
+  "repository": "github:eddiesr93/unstave",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "*.node"
+  ],
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "build": "napi build --platform --release --manifest-path ../../crates/unstave-napi/Cargo.toml --output-dir . --no-js --dts native.d.ts",
+    "test": "node --test test/*.test.js",
+    "typecheck": "napi build --dts-only --manifest-path ../../crates/unstave-napi/Cargo.toml"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "3.8.2"
+  },
+  "napi": {
+    "binaryName": "unstave"
+  }
+}

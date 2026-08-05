@@ -6,6 +6,12 @@ const CYTOSCAPE: &str = include_str!("../assets/vendor/cytoscape-3.31.2/cytoscap
 
 /// Render one portable HTML file with the report and graph library embedded.
 pub fn render(report: &AnalysisReport) -> serde_json::Result<String> {
+    let value = serde_json::to_value(report)?;
+    render_value(&value)
+}
+
+/// Render a report that already crossed a JSON-compatible API boundary.
+pub fn render_value(report: &serde_json::Value) -> serde_json::Result<String> {
     let json = serde_json::to_string(report)?;
     // JSON inside a script element must not be able to spell a closing script tag.
     let safe_json = json

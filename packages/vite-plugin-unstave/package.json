@@ -1,0 +1,34 @@
+{
+  "name": "vite-plugin-unstave",
+  "version": "0.1.0",
+  "description": "Non-blocking unstave module-graph reports for Vite",
+  "type": "module",
+  "license": "MIT",
+  "repository": "github:eddiesr93/unstave",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "unstave": "workspace:*"
+  },
+  "peerDependencies": {
+    "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "typescript": "7.0.2",
+    "vite": "8.2.0"
+  }
+}

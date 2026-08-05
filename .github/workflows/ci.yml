@@ -24,3 +24,14 @@ jobs:
         run: cargo clippy --all-targets --all-features -- -D warnings
       - name: test
         run: cargo test --all-features --workspace
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: enable pnpm
+        run: corepack enable
+      - name: install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+      - name: build native binding and Vite plugin
+        run: pnpm --filter unstave build && pnpm --filter vite-plugin-unstave build
+      - name: test JavaScript packages
+        run: pnpm test

@@ -88,6 +88,30 @@ max_own_decls = 2      # ...and the module may declare at most this many things
 import_style = "preserve"
 ```
 
+## Vite plugin
+
+`vite-plugin-unstave` runs the native analysis asynchronously, so Vite startup and
+HMR do not wait for the module graph. In development it serves the live report at
+`/__unstave`; production analysis is opt-in and writes JSON plus HTML at `buildEnd`.
+
+```ts
+import { defineConfig } from 'vite'
+import unstave from 'vite-plugin-unstave'
+
+export default defineConfig({
+  plugins: [
+    unstave({
+      warnAmplification: 5,
+      serveReport: true,
+      outDir: '.unstave',
+    }),
+  ],
+})
+```
+
+Set `enabled: true` to generate reports during production builds, or
+`enabled: false` to disable the plugin explicitly.
+
 ## Crates
 
 | Crate | Purpose |
@@ -95,6 +119,7 @@ import_style = "preserve"
 | `unstave-core` | Discovery, parsing, graph construction, analyses. A library — no I/O policy, no printing. |
 | `unstave-report` | Terminal, JSON, DOT, Mermaid and HTML renderers. |
 | `unstave-codemod` | Span-based, byte-preserving plans for safe barrel-import rewrites. |
+| `unstave-napi` | Two-function asynchronous Node-API boundary for reports and HTML. |
 | `unstave-cli` | The `unstave` binary. |
 
 ## Development
