@@ -4,6 +4,7 @@
 //! terminal and never prints. Rendering lives in `unstave-report`.
 
 pub mod analysis;
+pub mod cache;
 pub mod config;
 pub mod discovery;
 pub mod error;
@@ -13,6 +14,7 @@ pub mod parse;
 pub mod pipeline;
 pub mod resolve;
 
+pub use cache::{analyze_cached, cache_path, clear_cache};
 pub use config::Config;
 pub use discovery::{discover, Package, Workspace, WorkspaceKind};
 pub use error::{Error, Result};

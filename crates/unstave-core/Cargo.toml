@@ -30,7 +30,12 @@ ignore.workspace = true
 globset.workspace = true
 toml.workspace = true
 xxhash-rust.workspace = true
+rkyv.workspace = true
 
 [dev-dependencies]
 insta.workspace = true
 petgraph.workspace = true
+
+[[bench]]
+name = "pipeline"
+harness = false

@@ -8,13 +8,15 @@ use crate::error::{Error, Result};
 
 /// One npm package inside the analyzed workspace. Each gets its own resolver
 /// context because `tsconfig` `paths` and `package.json` `exports` are per-package.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct Package {
     /// Directory containing the `package.json`.
+    #[rkyv(with = rkyv::with::AsString)]
     pub root: PathBuf,
     /// `name` from `package.json`, when it has one.
     pub name: Option<String>,
     /// Nearest `tsconfig.json` at the package root, if present.
+    #[rkyv(with = rkyv::with::Map<rkyv::with::AsString>)]
     pub tsconfig: Option<PathBuf>,
     /// `sideEffects: false` in `package.json` means every module here is side-effect free.
     pub side_effects_false: bool,
@@ -23,13 +25,14 @@ pub struct Package {
     /// Dead-export analysis treats these and everything reachable from them as
     /// public API. Wildcard targets conservatively expand to every matching source
     /// file discovered inside the package.
+    #[rkyv(with = rkyv::with::Map<rkyv::with::AsString>)]
     pub public_entrypoints: Vec<PathBuf>,
 }
 
 /// How the workspace declares its packages. Recorded for reporting; package
 /// discovery itself does not depend on it, because every `package.json` gets its own
 /// resolver context regardless of whether a manifest lists it as a member.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub enum WorkspaceKind {
     /// `pnpm-workspace.yaml` at the root.
     Pnpm,
@@ -39,12 +42,14 @@ pub enum WorkspaceKind {
     Single,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct Workspace {
+    #[rkyv(with = rkyv::with::AsString)]
     pub root: PathBuf,
     pub kind: WorkspaceKind,
     /// Always non-empty: the root itself is a package when nothing else is found.
     pub packages: Vec<Package>,
+    #[rkyv(with = rkyv::with::Map<rkyv::with::AsString>)]
     pub files: Vec<PathBuf>,
 }
 

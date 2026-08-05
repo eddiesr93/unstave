@@ -4,7 +4,18 @@ use serde::{Deserialize, Serialize};
 
 /// Byte range into the original source. Mirrors `oxc_span::Span` but is owned,
 /// serializable, and free of any oxc lifetime.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
 pub struct Span {
     pub start: u32,
     pub end: u32,
@@ -22,7 +33,18 @@ impl From<oxc_span::Span> for Span {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub enum ImportKind {
     Named,
@@ -35,7 +57,17 @@ pub enum ImportKind {
 /// One imported name. `imported` is the name in the source module,
 /// `local` the name it is bound to here. For a default import,
 /// `imported` is `"default"`.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct Binding {
     pub local: String,
@@ -44,7 +76,17 @@ pub struct Binding {
     pub type_only: bool,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct ImportRecord {
     pub specifier: String,
@@ -63,7 +105,17 @@ impl ImportRecord {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
@@ -130,9 +182,12 @@ impl ExportRecord {
 
 /// Everything we extract from one source file. Owned — the oxc arena is gone by the
 /// time this leaves the parse closure.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Serialize, Deserialize, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct ModuleFacts {
+    #[rkyv(with = rkyv::with::AsString)]
     pub path: PathBuf,
     pub content_hash: u64,
     pub imports: Vec<ImportRecord>,

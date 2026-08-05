@@ -2,6 +2,7 @@ export interface AnalyzeOptions {
   root?: string
   config?: string
   includeTypeEdges?: boolean
+  noCache?: boolean
 }
 
 export interface AnalysisReport {

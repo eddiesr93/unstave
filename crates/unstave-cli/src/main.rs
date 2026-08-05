@@ -153,7 +153,7 @@ fn main() -> Result<()> {
         Command::Cycles => run_cycles(&cli.global),
         Command::DeadExports => run_dead_exports(&cli.global),
         Command::Fix(args) => run_fix(&cli.global, args),
-        Command::Cache(CacheCommand::Clear) => not_yet("cache clear", "M8"),
+        Command::Cache(CacheCommand::Clear) => run_cache_clear(&cli.global),
     }
 }
 
@@ -235,14 +235,42 @@ struct Loaded {
 fn load(global: &GlobalArgs) -> Result<Loaded> {
     let config = Config::load(&global.root, global.config.as_deref())
         .with_context(|| format!("loading config for {}", global.root.display()))?;
-    let analysis = analyze(&global.root, &config)
-        .with_context(|| format!("analyzing {}", global.root.display()))?;
+    let analysis = if global.no_cache {
+        analyze(&global.root, &config)
+    } else {
+        unstave_core::analyze_cached(&global.root, &config)
+    }
+    .with_context(|| format!("analyzing {}", global.root.display()))?;
+    if global.verbose > 0 {
+        let state = if global.no_cache {
+            "disabled"
+        } else if analysis.cache_hit {
+            "hit"
+        } else {
+            "miss"
+        };
+        eprintln!("cache: {state}");
+    }
     let graph = ModuleGraph::build(&analysis.modules);
     Ok(Loaded {
         config,
         analysis,
         graph,
     })
+}
+
+fn run_cache_clear(global: &GlobalArgs) -> Result<()> {
+    if unstave_core::clear_cache(&global.root)
+        .with_context(|| format!("clearing cache for {}", global.root.display()))?
+    {
+        println!(
+            "cleared {}",
+            unstave_core::cache_path(&global.root).display()
+        );
+    } else {
+        println!("cache already clear");
+    }
+    Ok(())
 }
 
 fn amplification_report(
@@ -413,8 +441,4 @@ fn parse_positive_usize(value: &str) -> std::result::Result<usize, String> {
 
 fn use_color() -> bool {
     std::env::var_os("NO_COLOR").is_none() && std::io::stdout().is_terminal()
-}
-
-fn not_yet(what: &str, milestone: &str) -> Result<()> {
-    anyhow::bail!("`{what}` is not implemented yet — it arrives at milestone {milestone}")
 }

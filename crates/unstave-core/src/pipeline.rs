@@ -13,7 +13,7 @@ use crate::parse::parse_module;
 use crate::resolve::{Resolved, ResolverSet, UnresolvedSpecifier};
 
 /// Facts plus resolution for one module.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, rkyv::Archive, rkyv::Serialize, rkyv::Deserialize)]
 pub struct Module {
     pub facts: ModuleFacts,
     /// Every distinct specifier in this module, mapped to what it resolved to.
@@ -44,6 +44,8 @@ pub struct Analysis {
     pub modules: Vec<Module>,
     pub unresolved: Vec<UnresolvedSpecifier>,
     pub timings: Timings,
+    /// Whether parsing and resolution were restored from the validated disk cache.
+    pub cache_hit: bool,
 }
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -92,6 +94,14 @@ pub fn analyze(root: &Path, config: &Config) -> Result<Analysis> {
     let workspace = discover(root, config)?;
     let discovery_ms = t.elapsed().as_millis();
 
+    analyze_discovered(workspace, started, discovery_ms)
+}
+
+pub(crate) fn analyze_discovered(
+    workspace: Workspace,
+    started: Instant,
+    discovery_ms: u128,
+) -> Result<Analysis> {
     // Parse in parallel. The allocator is not `Send`, so each closure builds its own
     // and everything it borrows is dropped before the owned facts are returned.
     let t = Instant::now();
@@ -144,6 +154,7 @@ pub fn analyze(root: &Path, config: &Config) -> Result<Analysis> {
             resolve_ms,
             total_ms: started.elapsed().as_millis(),
         },
+        cache_hit: false,
     })
 }
 

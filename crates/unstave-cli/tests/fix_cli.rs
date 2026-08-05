@@ -1,5 +1,8 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static SCRATCH_ID: AtomicU64 = AtomicU64::new(0);
 
 fn fixture(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -9,12 +12,13 @@ fn fixture(name: &str) -> PathBuf {
 
 fn scratch_fixture(name: &str) -> PathBuf {
     let unique = format!(
-        "unstave-fix-test-{}-{}",
+        "unstave-fix-test-{}-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .expect("clock should be after epoch")
-            .as_nanos()
+            .as_nanos(),
+        SCRATCH_ID.fetch_add(1, Ordering::Relaxed)
     );
     let target = std::env::temp_dir().join(unique);
     copy_tree(&fixture(name), &target);

@@ -54,6 +54,7 @@ json-strip-comments = "3.1"
 napi = { version = "3.12.0", default-features = false, features = ["napi6", "async", "serde-json", "dyn-symbols"] }
 napi-derive = "3.6.2"
 napi-build = "2.4.0"
+rkyv = "0.8.18"
 
 [profile.release]
 lto = "thin"

@@ -55,13 +55,30 @@ const NODE_BUILTINS: &[&str] = &[
 
 /// What a specifier turned out to be. Only [`Internal`](Resolved::Internal) becomes a
 /// traversable graph node; the rest are leaves or diagnostics.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Resolved {
     /// Inside the analyzed workspace.
-    Internal { path: PathBuf },
+    Internal {
+        #[rkyv(with = rkyv::with::AsString)]
+        path: PathBuf,
+    },
     /// Resolves into `node_modules`.
-    External { path: PathBuf, package: String },
+    External {
+        #[rkyv(with = rkyv::with::AsString)]
+        path: PathBuf,
+        package: String,
+    },
     /// `node:` protocol or a known builtin.
     Builtin { name: String },
     /// Recorded, never fatal.
@@ -78,10 +95,21 @@ impl Resolved {
 }
 
 /// An unresolved specifier, with enough context to point at it in the source.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    rkyv::Archive,
+    rkyv::Serialize,
+    rkyv::Deserialize,
+)]
 #[serde(rename_all = "camelCase")]
 pub struct UnresolvedSpecifier {
     pub specifier: String,
+    #[rkyv(with = rkyv::with::AsString)]
     pub importer: PathBuf,
     pub span: Span,
     pub reason: String,

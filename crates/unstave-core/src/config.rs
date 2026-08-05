@@ -89,6 +89,7 @@ pub const ALWAYS_EXCLUDE_DIRS: &[&str] = &[
     "coverage",
     ".nyc_output",
     ".git",
+    ".unstave",
 ];
 
 impl Config {

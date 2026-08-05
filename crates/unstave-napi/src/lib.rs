@@ -16,6 +16,8 @@ pub struct AnalyzeOptions {
     pub config: Option<String>,
     /// Include type-only edges in runtime-cost analyses.
     pub include_type_edges: Option<bool>,
+    /// Bypass the content-addressed analysis cache.
+    pub no_cache: Option<bool>,
 }
 
 #[doc(hidden)]
@@ -76,8 +78,12 @@ fn analyze_sync(options: &AnalyzeOptions) -> Result<Value, String> {
     let config_path = options.config.as_deref().map(PathBuf::from);
     let config = unstave_core::Config::load(&root, config_path.as_deref())
         .map_err(|error| format!("loading config for {}: {error}", root.display()))?;
-    let analysis = unstave_core::analyze(&root, &config)
-        .map_err(|error| format!("analyzing {}: {error}", root.display()))?;
+    let analysis = if options.no_cache.unwrap_or(false) {
+        unstave_core::analyze(&root, &config)
+    } else {
+        unstave_core::analyze_cached(&root, &config)
+    }
+    .map_err(|error| format!("analyzing {}: {error}", root.display()))?;
     let graph = ModuleGraph::build(&analysis.modules);
     let report = unstave_report::build_report(
         &analysis,
@@ -106,6 +112,7 @@ mod tests {
             root: Some(fixture("simple")),
             config: None,
             include_type_edges: Some(false),
+            no_cache: Some(true),
         })
         .expect("fixture should analyze");
 
@@ -119,6 +126,7 @@ mod tests {
             root: Some(fixture("simple")),
             config: None,
             include_type_edges: None,
+            no_cache: Some(true),
         })
         .expect("fixture should analyze");
 

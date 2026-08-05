@@ -44,6 +44,11 @@ unstave fix [--barrel <path>] [--only <glob>] [--import-style alias|relative|pre
 
 Global flags: `--config <path>`, `--root <path>`, `--no-cache`, `-v/-vv`.
 
+Analysis uses a checked, content-addressed cache at
+`<root>/.unstave/cache-v1.rkyv`. Source contents, configuration, manifests,
+tsconfig files, and lockfiles participate in the key. Use `--no-cache` for a
+forced cold run and `unstave cache clear` to remove the exact cache file.
+
 Non-terminal formats are written as `unstave-report.json`, `.dot`, `.mmd`, and
 `.html`. The default directory is `<root>/.unstave`; `--out` overrides it. JSON is
 complete and versioned with `schemaVersion: 1`. The HTML report is a single portable
@@ -129,6 +134,16 @@ cargo test --workspace
 cargo clippy --all-targets --all-features -- -D warnings
 cargo fmt --all
 ```
+
+The release benchmark generates 6000 TypeScript modules and enforces the cold
+and warm budgets from the specification:
+
+```bash
+cargo bench -p unstave-core --bench pipeline
+```
+
+See [docs/benchmarks.md](docs/benchmarks.md) for the latest measured results and
+machine details.
 
 Built on [oxc](https://oxc.rs) for parsing and resolution. The `oxc_*` crates release
 in lockstep, so they are pinned to a single exact version across the workspace —
