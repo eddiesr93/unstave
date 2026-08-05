@@ -3,4 +3,4 @@
 *.pending-snap
 .unstave/
 node_modules/
-unfurl-spec.md
+unstave-spec.md
