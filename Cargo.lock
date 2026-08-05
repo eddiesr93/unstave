@@ -1394,6 +1394,7 @@ name = "unstave-core"
 version = "0.1.0"
 dependencies = [
  "dashmap",
+ "fixedbitset",
  "globset",
  "ignore",
  "insta",

@@ -3,17 +3,20 @@
 //! This crate is a library first: it makes no assumptions about being run from a
 //! terminal and never prints. Rendering lives in `unstave-report`.
 
+pub mod analysis;
 pub mod config;
 pub mod discovery;
 pub mod error;
 pub mod facts;
+pub mod graph;
 pub mod parse;
 pub mod pipeline;
 pub mod resolve;
 
 pub use config::Config;
-pub use discovery::{discover, Package, Workspace};
+pub use discovery::{discover, Package, Workspace, WorkspaceKind};
 pub use error::{Error, Result};
 pub use facts::{Binding, ExportRecord, ImportKind, ImportRecord, ModuleFacts, Span};
+pub use graph::{EdgeKind, ModuleGraph, ModuleNode};
 pub use pipeline::{analyze, analyze_root, Analysis, Module};
 pub use resolve::{Resolved, ResolverSet, UnresolvedSpecifier};

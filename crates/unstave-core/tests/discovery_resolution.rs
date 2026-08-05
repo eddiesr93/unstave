@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use unstave_core::pipeline::{analyze, relative};
-use unstave_core::{Config, Resolved};
+use unstave_core::{Config, Resolved, WorkspaceKind};
 
 fn fixture(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -32,6 +32,7 @@ fn rel_files(analysis: &unstave_core::Analysis) -> Vec<String> {
 #[test]
 fn discovers_source_files_and_skips_manifests() {
     let analysis = run("simple");
+    assert_eq!(analysis.workspace.kind, WorkspaceKind::Single);
     assert_eq!(
         rel_files(&analysis),
         vec!["src/greet.ts", "src/main.ts", "src/math.ts"]
@@ -104,6 +105,8 @@ fn records_unresolved_specifiers_without_failing() {
 #[test]
 fn detects_workspace_packages_and_cross_package_imports() {
     let analysis = run("monorepo");
+
+    assert_eq!(analysis.workspace.kind, WorkspaceKind::Pnpm);
 
     let mut names: Vec<&str> = analysis
         .workspace

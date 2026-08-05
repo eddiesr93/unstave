@@ -32,6 +32,7 @@ serde_json = { version = "1", features = ["preserve_order"] }
 rayon = "1.10"
 dashmap = "6"
 petgraph = "0.8"
+fixedbitset = "0.5"
 ignore = "0.4"
 clap = { version = "4", features = ["derive"] }
 comfy-table = "8"

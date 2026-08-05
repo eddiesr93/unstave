@@ -3,6 +3,8 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::{Args, Parser, Subcommand};
+use unstave_core::analysis::{cycles, fan};
+use unstave_core::graph::ModuleGraph;
 use unstave_core::{analyze, Config};
 use unstave_report::{terminal, RenderOptions};
 
@@ -108,7 +110,7 @@ fn main() -> Result<()> {
     match &cli.command {
         Command::Analyze(args) => run_analyze(&cli.global, args),
         Command::Barrels { .. } => not_yet("barrels", "M4"),
-        Command::Cycles => not_yet("cycles", "M3"),
+        Command::Cycles => run_cycles(&cli.global),
         Command::DeadExports => not_yet("dead-exports", "M5"),
         Command::Fix(_) => not_yet("fix", "M6"),
         Command::Cache(CacheCommand::Clear) => not_yet("cache clear", "M8"),
@@ -130,6 +132,14 @@ fn run_analyze(global: &GlobalArgs, args: &AnalyzeArgs) -> Result<()> {
                     max_rows: 0,
                 };
                 print!("{}", terminal::render(&analysis, &opts));
+
+                let graph = ModuleGraph::build(&analysis.modules);
+                let found = cycles::find(&graph, args.include_type_edges);
+                let fan = fan::compute(&graph, args.include_type_edges, FAN_LIMIT);
+                print!(
+                    "{}",
+                    terminal::render_graph(&analysis, &graph, &found, &fan, &opts)
+                );
             }
             Format::Json | Format::Dot | Format::Mermaid | Format::Html => {
                 return not_yet("this --format", "M5");
@@ -150,6 +160,34 @@ fn run_analyze(global: &GlobalArgs, args: &AnalyzeArgs) -> Result<()> {
         );
     }
 
+    Ok(())
+}
+
+/// Modules ranked per fan-in/fan-out table.
+const FAN_LIMIT: usize = 20;
+
+fn run_cycles(global: &GlobalArgs) -> Result<()> {
+    let config = Config::load(&global.root, global.config.as_deref())
+        .with_context(|| format!("loading config for {}", global.root.display()))?;
+    let analysis = analyze(&global.root, &config)
+        .with_context(|| format!("analyzing {}", global.root.display()))?;
+
+    let graph = ModuleGraph::build(&analysis.modules);
+    let found = cycles::find(&graph, false);
+    let opts = RenderOptions {
+        color: use_color(),
+        max_rows: 0,
+    };
+    print!("{}", terminal::render_cycles(&analysis, &found, &opts));
+
+    // `max_cycles` is a threshold the user opted into, so exceeding it is a failure.
+    if found.len() > config.thresholds.max_cycles {
+        anyhow::bail!(
+            "{} cycle(s) found, threshold is {}",
+            found.len(),
+            config.thresholds.max_cycles
+        );
+    }
     Ok(())
 }
 

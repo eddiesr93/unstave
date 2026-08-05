@@ -20,9 +20,23 @@ pub struct Package {
     pub side_effects_false: bool,
 }
 
+/// How the workspace declares its packages. Recorded for reporting; package
+/// discovery itself does not depend on it, because every `package.json` gets its own
+/// resolver context regardless of whether a manifest lists it as a member.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WorkspaceKind {
+    /// `pnpm-workspace.yaml` at the root.
+    Pnpm,
+    /// A `workspaces` field in the root `package.json` (npm, yarn, bun).
+    NpmWorkspaces,
+    /// A single package, or a layout we do not recognise.
+    Single,
+}
+
 #[derive(Debug, Clone)]
 pub struct Workspace {
     pub root: PathBuf,
+    pub kind: WorkspaceKind,
     /// Always non-empty: the root itself is a package when nothing else is found.
     pub packages: Vec<Package>,
     pub files: Vec<PathBuf>,
@@ -99,11 +113,34 @@ pub fn discover(root: &Path, config: &Config) -> Result<Workspace> {
 
     let packages = build_packages(&root, &package_jsons);
 
+    let kind = detect_workspace_kind(&root);
+
     Ok(Workspace {
         root,
+        kind,
         packages,
         files,
     })
+}
+
+/// Recognise the workspace layout from its root manifests.
+///
+/// Deliberately does not parse the member globs: they would only ever *narrow* the
+/// package set, and a package with its own `tsconfig`/`exports` needs its own
+/// resolver whether or not a root manifest lists it. Reading the globs would mean
+/// taking a YAML dependency to gain nothing.
+fn detect_workspace_kind(root: &Path) -> WorkspaceKind {
+    if root.join("pnpm-workspace.yaml").is_file() || root.join("pnpm-workspace.yml").is_file() {
+        return WorkspaceKind::Pnpm;
+    }
+    if let Ok(text) = std::fs::read_to_string(root.join("package.json")) {
+        if let Ok(json) = serde_json::from_str::<serde_json::Value>(&text) {
+            if json.get("workspaces").is_some() {
+                return WorkspaceKind::NpmWorkspaces;
+            }
+        }
+    }
+    WorkspaceKind::Single
 }
 
 fn build_globset(patterns: &[String]) -> Result<GlobSet> {
