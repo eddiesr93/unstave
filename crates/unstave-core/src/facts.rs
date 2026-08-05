@@ -36,6 +36,7 @@ pub enum ImportKind {
 /// `local` the name it is bound to here. For a default import,
 /// `imported` is `"default"`.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Binding {
     pub local: String,
     pub imported: String,
@@ -63,7 +64,11 @@ impl ImportRecord {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 pub enum ExportRecord {
     /// Declared in this module.
     Local {
@@ -132,9 +137,17 @@ pub struct ModuleFacts {
     pub content_hash: u64,
     pub imports: Vec<ImportRecord>,
     pub exports: Vec<ExportRecord>,
-    /// Top-level statements beyond declarations, imports and exports —
-    /// or a `package.json` `sideEffects` field that says so.
+    /// Top-level statements beyond declarations, imports and exports.
+    /// This is evidence read out of the source, independent of any manifest claim.
     pub has_side_effects: bool,
+    /// The owning `package.json` declares `sideEffects: false`.
+    ///
+    /// Kept separate from [`has_side_effects`](Self::has_side_effects) on purpose: the
+    /// manifest is a *claim* by the package author, the AST is *evidence*. Bundlers
+    /// trust the claim for tree-shaking, but a codemod that drops an import is harder
+    /// to undo than a bad tree-shake, so the two are recorded separately and combined
+    /// by policy at the call site rather than being collapsed here.
+    pub package_side_effects_free: bool,
     /// Value + type declarations defined here.
     pub own_decl_count: usize,
     /// Parse diagnostics, kept as strings; a file that fails to parse still gets a node.
@@ -149,9 +162,20 @@ impl ModuleFacts {
             imports: Vec::new(),
             exports: Vec::new(),
             has_side_effects: false,
+            package_side_effects_free: false,
             own_decl_count: 0,
             parse_errors: Vec::new(),
         }
+    }
+
+    /// Whether a rewrite may drop an import of this module without changing behavior.
+    ///
+    /// Deliberately ignores [`package_side_effects_free`](Self::package_side_effects_free):
+    /// observed source always wins over the manifest's claim. A `sideEffects: false`
+    /// that is wrong is common and costs a bundler only a missed optimization, but it
+    /// would cost this tool a silently deleted side effect.
+    pub fn is_side_effect_free(&self) -> bool {
+        !self.has_side_effects
     }
 
     /// Distinct specifiers this module depends on, in source order, deduplicated.

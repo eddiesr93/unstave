@@ -1,0 +1,182 @@
+---
+source: crates/unstave-core/tests/facts_snapshots.rs
+expression: "snapshot_fixture(\"pure-barrel\").join(\"\\n\")"
+---
+{
+  "path": "src/clients/alpha.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": false,
+  "ownDeclCount": 1,
+  "imports": [],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "AlphaClient",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": []
+}
+{
+  "path": "src/clients/beta.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": false,
+  "ownDeclCount": 1,
+  "imports": [],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "BetaClient",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": []
+}
+{
+  "path": "src/clients/delta.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": false,
+  "ownDeclCount": 1,
+  "imports": [],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "DeltaClient",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": []
+}
+{
+  "path": "src/clients/epsilon.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": false,
+  "ownDeclCount": 1,
+  "imports": [],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "EpsilonClient",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": []
+}
+{
+  "path": "src/clients/gamma.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": false,
+  "ownDeclCount": 1,
+  "imports": [],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "GammaClient",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": []
+}
+{
+  "path": "src/clients/index.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": false,
+  "ownDeclCount": 0,
+  "imports": [],
+  "exports": [
+    {
+      "kind": "named",
+      "name": "AlphaClient",
+      "imported": "AlphaClient",
+      "from": "./alpha",
+      "typeOnly": false
+    },
+    {
+      "kind": "named",
+      "name": "BetaClient",
+      "imported": "BetaClient",
+      "from": "./beta",
+      "typeOnly": false
+    },
+    {
+      "kind": "named",
+      "name": "GammaClient",
+      "imported": "GammaClient",
+      "from": "./gamma",
+      "typeOnly": false
+    },
+    {
+      "kind": "named",
+      "name": "DeltaClient",
+      "imported": "DeltaClient",
+      "from": "./delta",
+      "typeOnly": false
+    },
+    {
+      "kind": "named",
+      "name": "EpsilonClient",
+      "imported": "EpsilonClient",
+      "from": "./epsilon",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": [
+    [
+      "./alpha",
+      "internal:src/clients/alpha.ts"
+    ],
+    [
+      "./beta",
+      "internal:src/clients/beta.ts"
+    ],
+    [
+      "./delta",
+      "internal:src/clients/delta.ts"
+    ],
+    [
+      "./epsilon",
+      "internal:src/clients/epsilon.ts"
+    ],
+    [
+      "./gamma",
+      "internal:src/clients/gamma.ts"
+    ]
+  ]
+}
+{
+  "path": "src/main.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": false,
+  "ownDeclCount": 1,
+  "imports": [
+    {
+      "specifier": "@/clients",
+      "kind": "named",
+      "typeOnly": false,
+      "bindings": [
+        {
+          "local": "AlphaClient",
+          "imported": "AlphaClient",
+          "typeOnly": false
+        }
+      ],
+      "span": {
+        "start": 0,
+        "end": 40
+      }
+    }
+  ],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "client",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": [
+    [
+      "@/clients",
+      "internal:src/clients/index.ts"
+    ]
+  ]
+}

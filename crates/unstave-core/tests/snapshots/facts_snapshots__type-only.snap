@@ -1,0 +1,132 @@
+---
+source: crates/unstave-core/tests/facts_snapshots.rs
+expression: "snapshot_fixture(\"type-only\").join(\"\\n\")"
+---
+{
+  "path": "src/helper.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": true,
+  "ownDeclCount": 1,
+  "imports": [],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "helper",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": []
+}
+{
+  "path": "src/main.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": true,
+  "ownDeclCount": 2,
+  "imports": [
+    {
+      "specifier": "./types",
+      "kind": "named",
+      "typeOnly": true,
+      "bindings": [
+        {
+          "local": "User",
+          "imported": "User",
+          "typeOnly": true
+        }
+      ],
+      "span": {
+        "start": 0,
+        "end": 36
+      }
+    },
+    {
+      "specifier": "./types",
+      "kind": "named",
+      "typeOnly": false,
+      "bindings": [
+        {
+          "local": "DEFAULT_ROLE",
+          "imported": "DEFAULT_ROLE",
+          "typeOnly": false
+        },
+        {
+          "local": "Role",
+          "imported": "Role",
+          "typeOnly": true
+        }
+      ],
+      "span": {
+        "start": 37,
+        "end": 87
+      }
+    },
+    {
+      "specifier": "./helper",
+      "kind": "named",
+      "typeOnly": false,
+      "bindings": [
+        {
+          "local": "helper",
+          "imported": "helper",
+          "typeOnly": false
+        }
+      ],
+      "span": {
+        "start": 88,
+        "end": 122
+      }
+    }
+  ],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "User",
+      "typeOnly": true
+    },
+    {
+      "kind": "local",
+      "name": "role",
+      "typeOnly": false
+    },
+    {
+      "kind": "local",
+      "name": "value",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": [
+    [
+      "./helper",
+      "internal:src/helper.ts"
+    ],
+    [
+      "./types",
+      "internal:src/types.ts"
+    ]
+  ]
+}
+{
+  "path": "src/types.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": true,
+  "ownDeclCount": 3,
+  "imports": [],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "User",
+      "typeOnly": true
+    },
+    {
+      "kind": "local",
+      "name": "Role",
+      "typeOnly": true
+    },
+    {
+      "kind": "local",
+      "name": "DEFAULT_ROLE",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": []
+}

@@ -150,9 +150,11 @@ pub fn analyze(root: &Path, config: &Config) -> Result<Analysis> {
 fn resolve_module(
     workspace: &Workspace,
     resolvers: &ResolverSet,
-    facts: ModuleFacts,
+    mut facts: ModuleFacts,
 ) -> (Module, Vec<UnresolvedSpecifier>) {
     let package = workspace.package_for(&facts.path);
+    facts.package_side_effects_free = package.side_effects_false;
+
     let mut resolutions = BTreeMap::new();
     let mut misses = Vec::new();
 

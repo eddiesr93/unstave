@@ -1,0 +1,121 @@
+---
+source: crates/unstave-core/tests/facts_snapshots.rs
+expression: "snapshot_fixture(\"simple\").join(\"\\n\")"
+---
+{
+  "path": "src/greet.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": false,
+  "ownDeclCount": 1,
+  "imports": [],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "greet",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": []
+}
+{
+  "path": "src/main.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": false,
+  "ownDeclCount": 3,
+  "imports": [
+    {
+      "specifier": "./math",
+      "kind": "named",
+      "typeOnly": false,
+      "bindings": [
+        {
+          "local": "add",
+          "imported": "add",
+          "typeOnly": false
+        }
+      ],
+      "span": {
+        "start": 0,
+        "end": 29
+      }
+    },
+    {
+      "specifier": "@/greet",
+      "kind": "named",
+      "typeOnly": false,
+      "bindings": [
+        {
+          "local": "greet",
+          "imported": "greet",
+          "typeOnly": false
+        }
+      ],
+      "span": {
+        "start": 30,
+        "end": 62
+      }
+    },
+    {
+      "specifier": "node:fs/promises",
+      "kind": "named",
+      "typeOnly": false,
+      "bindings": [
+        {
+          "local": "readFile",
+          "imported": "readFile",
+          "typeOnly": false
+        }
+      ],
+      "span": {
+        "start": 63,
+        "end": 107
+      }
+    }
+  ],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "result",
+      "typeOnly": false
+    },
+    {
+      "kind": "local",
+      "name": "message",
+      "typeOnly": false
+    },
+    {
+      "kind": "local",
+      "name": "reader",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": [
+    [
+      "./math",
+      "internal:src/math.ts"
+    ],
+    [
+      "@/greet",
+      "internal:src/greet.ts"
+    ],
+    [
+      "node:fs/promises",
+      "builtin:fs/promises"
+    ]
+  ]
+}
+{
+  "path": "src/math.ts",
+  "hasSideEffects": false,
+  "packageSideEffectsFree": false,
+  "ownDeclCount": 1,
+  "imports": [],
+  "exports": [
+    {
+      "kind": "local",
+      "name": "add",
+      "typeOnly": false
+    }
+  ],
+  "resolutions": []
+}
