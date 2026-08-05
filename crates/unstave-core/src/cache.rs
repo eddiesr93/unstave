@@ -165,16 +165,20 @@ fn update_field(hasher: &mut Xxh3, label: &[u8], value: &[u8]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    static SCRATCH_ID: AtomicU64 = AtomicU64::new(0);
 
     fn scratch_fixture() -> PathBuf {
         let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/simple");
         let target = std::env::temp_dir().join(format!(
-            "unstave-cache-test-{}-{}",
+            "unstave-cache-test-{}-{}-{}",
             std::process::id(),
             std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .expect("clock after epoch")
-                .as_nanos()
+                .as_nanos(),
+            SCRATCH_ID.fetch_add(1, Ordering::Relaxed)
         ));
         copy_tree(&source, &target);
         target
@@ -184,6 +188,9 @@ mod tests {
         std::fs::create_dir_all(target).expect("create fixture directory");
         for entry in std::fs::read_dir(source).expect("read fixture") {
             let entry = entry.expect("fixture entry");
+            if entry.file_name() == ".unstave" {
+                continue;
+            }
             let destination = target.join(entry.file_name());
             if entry.file_type().expect("file type").is_dir() {
                 copy_tree(&entry.path(), &destination);

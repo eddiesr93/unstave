@@ -1,0 +1,27 @@
+{
+  "name": "unstave-linux-x64-gnu",
+  "version": "0.1.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "unstave.linux-x64-gnu.node",
+  "files": [
+    "unstave.linux-x64-gnu.node"
+  ],
+  "description": "Native module-graph analysis for TypeScript and React workspaces",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "repository": "github:eddiesr93/unstave",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "os": [
+    "linux"
+  ],
+  "libc": [
+    "glibc"
+  ]
+}

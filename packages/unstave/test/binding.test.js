@@ -11,7 +11,10 @@ test('native binding exposes exactly analyze and renderHtml', () => {
 })
 
 test('analyze and renderHtml cross the async native boundary', async () => {
-  const report = await analyze({ root: join(__dirname, '../../../tests/fixtures/simple') })
+  const report = await analyze({
+    root: join(__dirname, '../../../tests/fixtures/simple'),
+    noCache: true,
+  })
   assert.equal(report.schemaVersion, 1)
   assert.equal(report.summary.filesAnalyzed, 3)
 

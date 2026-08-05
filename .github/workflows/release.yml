@@ -1,0 +1,209 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  CARGO_TERM_COLOR: always
+  MACOSX_DEPLOYMENT_TARGET: "11.0"
+
+jobs:
+  validate:
+    name: Validate release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check tag and manifest versions
+        shell: bash
+        run: node scripts/check-release-version.mjs "${GITHUB_REF_NAME#v}"
+      - name: Verify Cargo packages
+        run: cargo package --workspace --locked --no-verify
+      - name: Build JavaScript packages
+        run: pnpm build
+      - name: Test JavaScript packages
+        run: pnpm test
+
+  publish-crates:
+    name: Publish Rust crates
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish crates in dependency order
+        shell: bash
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          cargo publish --locked -p unstave-core
+          sleep 30
+          cargo publish --locked -p unstave-report
+          cargo publish --locked -p unstave-codemod
+          sleep 30
+          cargo publish --locked -p unstave-napi
+          cargo publish --locked -p unstave-cli
+
+  build-native:
+    name: Build ${{ matrix.target }}
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: macos-latest
+            target: x86_64-apple-darwin
+            args: ""
+          - host: macos-latest
+            target: aarch64-apple-darwin
+            args: ""
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            args: "--use-napi-cross"
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            args: "--cross-compile"
+          - host: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            args: "--use-napi-cross"
+          - host: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            args: "--cross-compile"
+          - host: windows-latest
+            target: x86_64-pc-windows-msvc
+            args: ""
+          - host: windows-latest
+            target: aarch64-pc-windows-msvc
+            args: ""
+    runs-on: ${{ matrix.host }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - uses: mlugg/setup-zig@v2
+        if: contains(matrix.target, 'musl')
+        with:
+          version: 0.14.1
+      - uses: taiki-e/install-action@v2
+        if: contains(matrix.target, 'musl')
+        with:
+          tool: cargo-zigbuild
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build native binding
+        shell: bash
+        run: >-
+          pnpm --filter unstave exec napi build
+          --release
+          --platform
+          --target ${{ matrix.target }}
+          --manifest-path ../../crates/unstave-napi/Cargo.toml
+          --output-dir .
+          --no-js
+          --dts native.d.ts
+          ${{ matrix.args }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bindings-${{ matrix.target }}
+          path: packages/unstave/unstave.*.node
+          if-no-files-found: error
+
+  test-native:
+    name: Test ${{ matrix.target }}
+    needs: build-native
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: macos-latest
+            target: x86_64-apple-darwin
+            architecture: x64
+          - host: macos-latest
+            target: aarch64-apple-darwin
+            architecture: arm64
+          - host: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            architecture: x64
+          - host: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            architecture: arm64
+          - host: windows-latest
+            target: x86_64-pc-windows-msvc
+            architecture: x64
+          - host: windows-11-arm
+            target: aarch64-pc-windows-msvc
+            architecture: arm64
+    runs-on: ${{ matrix.host }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          architecture: ${{ matrix.architecture }}
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@v8
+        with:
+          name: bindings-${{ matrix.target }}
+          path: packages/unstave
+      - name: Test native binding
+        run: pnpm --filter unstave test
+
+  publish-npm:
+    name: Publish npm packages
+    needs: [validate, build-native, test-native]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: Enable pnpm
+        run: corepack enable
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Generate native package directories
+        run: pnpm --filter unstave create-npm-dirs
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: bindings-*
+          path: artifacts
+      - name: Place native artifacts in platform packages
+        run: pnpm --filter unstave exec napi artifacts --output-dir ../../artifacts --npm-dir npm
+      - name: Build Vite plugin
+        run: pnpm --filter vite-plugin-unstave build
+      - name: Publish native packages and loader
+        working-directory: packages/unstave
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance
+      - name: Publish Vite plugin
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: pnpm --filter vite-plugin-unstave publish --no-git-checks --access public --provenance

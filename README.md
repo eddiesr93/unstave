@@ -10,8 +10,8 @@ The problem it exists to solve: a single `import { Foo } from '@/clients'` can p
 hundreds of modules into your dev server's graph, because the barrel re-exports all
 of them. `unstave` measures that amplification precisely, then fixes it.
 
-> **Status: early.** Under active development against a written spec. Not yet
-> published to crates.io or npm. Interfaces will change.
+> **Status: early.** The initial implementation is complete and release automation
+> is in place. Interfaces may still change before 1.0.
 
 ## What it is not
 
@@ -20,10 +20,24 @@ inference — and no bundle-size analysis.
 
 ## Install
 
-Not yet published. For now:
+After publishing a version tag, install the CLI from crates.io:
 
 ```bash
-cargo install --path crates/unstave-cli
+cargo install unstave-cli
+```
+
+Or install it with Homebrew:
+
+```bash
+brew tap eddiesr93/unstave https://github.com/eddiesr93/unstave
+brew install unstave
+```
+
+The native Node API and Vite integration are published separately:
+
+```bash
+npm install unstave
+npm install --save-dev vite-plugin-unstave
 ```
 
 ## Usage

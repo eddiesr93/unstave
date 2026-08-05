@@ -10,7 +10,7 @@ function platformPackage() {
   const suffix = process.platform === 'linux'
     ? `${process.platform}-${process.arch}-${libc}`
     : `${process.platform}-${process.arch}`
-  return `@unstave/${suffix}`
+  return `unstave-${suffix}`
 }
 
 const platform = process.platform === 'linux'

@@ -1,0 +1,24 @@
+{
+  "name": "unstave-darwin-arm64",
+  "version": "0.1.0",
+  "cpu": [
+    "arm64"
+  ],
+  "main": "unstave.darwin-arm64.node",
+  "files": [
+    "unstave.darwin-arm64.node"
+  ],
+  "description": "Native module-graph analysis for TypeScript and React workspaces",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "repository": "github:eddiesr93/unstave",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "os": [
+    "darwin"
+  ]
+}

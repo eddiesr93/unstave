@@ -6,6 +6,7 @@ node_modules/
 .pnpm-store/
 packages/*/dist/
 packages/unstave/*.node
+packages/unstave/npm/**/*.node
 packages/unstave/native.d.ts
 crates/unstave-napi/*.node
 crates/unstave-napi/index.js

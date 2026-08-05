@@ -1,5 +1,8 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static SCRATCH_ID: AtomicU64 = AtomicU64::new(0);
 
 fn fixture() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/simple")
@@ -7,12 +10,13 @@ fn fixture() -> PathBuf {
 
 fn scratch_fixture() -> PathBuf {
     let target = std::env::temp_dir().join(format!(
-        "unstave-cache-cli-test-{}-{}",
+        "unstave-cache-cli-test-{}-{}-{}",
         std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .expect("clock should be after epoch")
-            .as_nanos()
+            .as_nanos(),
+        SCRATCH_ID.fetch_add(1, Ordering::Relaxed)
     ));
     copy_tree(&fixture(), &target);
     target
@@ -22,6 +26,9 @@ fn copy_tree(source: &Path, target: &Path) {
     std::fs::create_dir_all(target).expect("create scratch fixture");
     for entry in std::fs::read_dir(source).expect("read fixture") {
         let entry = entry.expect("fixture entry");
+        if entry.file_name() == ".unstave" {
+            continue;
+        }
         let destination = target.join(entry.file_name());
         if entry.file_type().expect("file type").is_dir() {
             copy_tree(&entry.path(), &destination);
