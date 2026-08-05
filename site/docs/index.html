@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#181b13">
+  <meta name="description" content="Install unstave, analyze a TypeScript module graph, inspect every CLI option, configure safe rewrites, and integrate with Node or Vite.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="unstave documentation">
+  <meta property="og:description" content="Installation, CLI commands, options, configuration, codemod safety, Node API, and Vite integration.">
+  <meta property="og:url" content="https://eddiesr93.github.io/unstave/docs/">
+  <meta property="og:image" content="https://eddiesr93.github.io/unstave/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="canonical" href="https://eddiesr93.github.io/unstave/docs/">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=League+Gothic&amp;display=swap" rel="stylesheet">
+  <script>document.documentElement.classList.add('js')</script>
+  <link rel="stylesheet" href="../styles.css">
+  <title>Documentation - unstave</title>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#main">Skip to documentation</a>
+
+  <header class="site-header">
+    <a class="wordmark" href="../" aria-label="unstave product overview">
+      <span>UN</span><i aria-hidden="true"></i><span>STAVE</span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="../">Overview</a>
+      <a href="./" aria-current="page">Docs</a>
+      <a href="#installation">Install</a>
+    </nav>
+    <a class="header-github" href="https://github.com/eddiesr93/unstave">GitHub</a>
+  </header>
+
+  <main class="docs-shell" id="main">
+    <aside class="docs-sidebar" aria-label="Documentation navigation">
+      <div class="docs-sidebar-inner">
+        <p class="docs-version"><span>Documentation</span><strong>v0.1.0</strong></p>
+        <a class="docs-back" href="../">Product overview</a>
+        <nav class="docs-nav docs-nav-desktop" aria-label="Documentation sections">
+          <a href="#introduction" class="is-active" data-doc-link><span>01</span>Introduction</a>
+          <a href="#installation" data-doc-link><span>02</span>Installation</a>
+          <a href="#quick-start" data-doc-link><span>03</span>Quick start</a>
+          <a href="#commands" data-doc-link><span>04</span>Commands</a>
+          <a href="#options" data-doc-link><span>05</span>CLI options</a>
+          <a href="#configuration" data-doc-link><span>06</span>Configuration</a>
+          <a href="#safe-rewrites" data-doc-link><span>07</span>Safe rewrites</a>
+          <a href="#integrations" data-doc-link><span>08</span>Integrations</a>
+        </nav>
+      </div>
+    </aside>
+
+    <article class="docs-content">
+      <section class="docs-section docs-intro" id="introduction" aria-labelledby="introduction-title" data-doc-section>
+        <p class="section-kicker">Documentation / v0.1.0</p>
+        <h1 id="introduction-title">Take the graph <em>apart.</em></h1>
+        <p class="docs-lede">unstave analyzes TypeScript and React module graphs, finds expensive barrel imports, exposes cycles and dead exports, and produces byte-preserving rewrites when a direct import can be proven safe.</p>
+
+        <details class="docs-mobile-nav">
+          <summary>On this page</summary>
+          <nav class="docs-nav" aria-label="Mobile documentation sections">
+            <a href="#introduction"><span>01</span>Introduction</a>
+            <a href="#installation"><span>02</span>Installation</a>
+            <a href="#quick-start"><span>03</span>Quick start</a>
+            <a href="#commands"><span>04</span>Commands</a>
+            <a href="#options"><span>05</span>CLI options</a>
+            <a href="#configuration"><span>06</span>Configuration</a>
+            <a href="#safe-rewrites"><span>07</span>Safe rewrites</a>
+            <a href="#integrations"><span>08</span>Integrations</a>
+          </nav>
+        </details>
+
+        <div class="docs-callout">
+          <strong>Scope</strong>
+          <p>unstave is a graph analyzer and codemod. It is not a bundler, type checker, or bundle-size profiler.</p>
+        </div>
+      </section>
+
+      <section class="docs-section" id="installation" aria-labelledby="installation-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">02 / Installation</p>
+          <h2 id="installation-title">Choose your entry point.</h2>
+          <p>The CLI can be installed from the repository today. Registry, Homebrew, and npm packages are prepared for the v0.1.0 release.</p>
+        </div>
+
+        <div class="docs-subsection">
+          <h3>CLI from source</h3>
+          <p>This is the available installation path before the first registry release.</p>
+          <div class="docs-code">
+            <div class="docs-code-meta"><span>Terminal</span><button class="docs-copy" type="button" data-copy-target="install-source-command">Copy</button></div>
+            <pre><code id="install-source-command">cargo install --git https://github.com/eddiesr93/unstave unstave-cli</code></pre>
+          </div>
+        </div>
+
+        <div class="docs-subsection">
+          <h3>Release channels</h3>
+          <p>These commands become the standard install paths once v0.1.0 is published.</p>
+          <div class="docs-code">
+            <div class="docs-code-meta"><span>Cargo and Homebrew</span><button class="docs-copy" type="button" data-copy-target="install-release-command">Copy</button></div>
+            <pre><code id="install-release-command">cargo install unstave-cli
+
+brew tap eddiesr93/unstave https://github.com/eddiesr93/unstave
+brew install unstave</code></pre>
+          </div>
+        </div>
+
+        <div class="docs-subsection">
+          <h3>Node and Vite</h3>
+          <p>Install only the native API, only the Vite plugin, or both.</p>
+          <div class="docs-code">
+            <div class="docs-code-meta"><span>npm</span><button class="docs-copy" type="button" data-copy-target="install-node-command">Copy</button></div>
+            <pre><code id="install-node-command">npm install unstave
+npm install --save-dev vite-plugin-unstave</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="docs-section" id="quick-start" aria-labelledby="quick-start-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">03 / Quick start</p>
+          <h2 id="quick-start-title">Measure before you rewrite.</h2>
+          <p>Run the full analysis first, inspect the ranked barrel report, then preview a codemod without changing source files.</p>
+        </div>
+        <div class="docs-code">
+          <div class="docs-code-meta"><span>Terminal</span><button class="docs-copy" type="button" data-copy-target="quick-start-command">Copy</button></div>
+          <pre><code id="quick-start-command">cd your-typescript-workspace
+
+unstave analyze --format terminal --format html
+unstave barrels --min-amplification 2
+unstave fix --dry-run</code></pre>
+        </div>
+        <div class="docs-prose">
+          <ol>
+            <li>The terminal report summarizes the workspace and ranks structural cost.</li>
+            <li>The portable report is written to <code>.unstave/unstave-report.html</code>.</li>
+            <li><code>fix --dry-run</code> prints the exact unified diff and leaves every file untouched.</li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="docs-section" id="commands" aria-labelledby="commands-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">04 / Commands</p>
+          <h2 id="commands-title">Six focused operations.</h2>
+          <p>Each command shares the global workspace, configuration, cache, and verbosity options.</p>
+        </div>
+        <div class="command-list">
+          <article class="command-row"><h3><code>unstave analyze</code></h3><p>Build the complete graph and render one or more terminal, JSON, DOT, Mermaid, or HTML reports.</p></article>
+          <article class="command-row"><h3><code>unstave barrels</code></h3><p>Rank barrel files by amplification, excess reachable modules, import sites, and rewritable symbols.</p></article>
+          <article class="command-row"><h3><code>unstave cycles</code></h3><p>Report import cycles and a closed shortest path for each cycle.</p></article>
+          <article class="command-row"><h3><code>unstave dead-exports</code></h3><p>Find exported definitions with no inbound references while excluding configured and package entrypoints.</p></article>
+          <article class="command-row"><h3><code>unstave fix</code></h3><p>Plan or apply safe direct-import rewrites. The default behavior is a dry run.</p></article>
+          <article class="command-row"><h3><code>unstave cache clear</code></h3><p>Remove the workspace analysis cache at <code>.unstave/cache-v1.rkyv</code>.</p></article>
+        </div>
+      </section>
+
+      <section class="docs-section" id="options" aria-labelledby="options-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">05 / CLI options</p>
+          <h2 id="options-title">Every switch, in one place.</h2>
+          <p>Global options can appear with any subcommand. Command-specific options affect only the operation shown.</p>
+        </div>
+
+        <div class="docs-subsection">
+          <h3>Global options</h3>
+          <div class="docs-table-wrap">
+            <table class="docs-table">
+              <thead><tr><th>Option</th><th>Default</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td><code>--root &lt;PATH&gt;</code></td><td><code>.</code></td><td>Workspace root to analyze.</td></tr>
+                <tr><td><code>--config &lt;PATH&gt;</code></td><td><code>&lt;root&gt;/unstave.toml</code></td><td>Use an explicit configuration file.</td></tr>
+                <tr><td><code>--no-cache</code></td><td>off</td><td>Bypass reads and writes for the content-addressed cache.</td></tr>
+                <tr><td><code>-v</code>, <code>--verbose</code></td><td>0</td><td>Increase verbosity. Repeat as <code>-vv</code> for more detail.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="docs-subsection">
+          <h3><code>analyze</code> options</h3>
+          <div class="docs-table-wrap">
+            <table class="docs-table">
+              <thead><tr><th>Option</th><th>Default</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td><code>--format &lt;FORMAT&gt;</code></td><td><code>terminal</code></td><td>Choose terminal, json, dot, mermaid, or html. Repeat to generate multiple formats.</td></tr>
+                <tr><td><code>--out &lt;DIR&gt;</code></td><td><code>.unstave</code></td><td>Output directory for every non-terminal report.</td></tr>
+                <tr><td><code>--include-type-edges</code></td><td>off</td><td>Include type-only edges in runtime-cost analyses.</td></tr>
+                <tr><td><code>--max-nodes &lt;N&gt;</code></td><td>150</td><td>Collapse DOT and Mermaid output by directory above this node count.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="docs-subsection">
+          <h3><code>barrels</code> options</h3>
+          <div class="docs-table-wrap">
+            <table class="docs-table">
+              <thead><tr><th>Option</th><th>Default</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td><code>--min-amplification &lt;F&gt;</code></td><td>all</td><td>Show only barrel findings at or above the requested amplification.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="docs-subsection">
+          <h3><code>fix</code> options</h3>
+          <div class="docs-table-wrap">
+            <table class="docs-table">
+              <thead><tr><th>Option</th><th>Default</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td><code>--dry-run</code></td><td>on</td><td>Print a unified diff without changing files.</td></tr>
+                <tr><td><code>--write</code></td><td>off</td><td>Apply the exact safe rewrite plan to source files.</td></tr>
+                <tr><td><code>--check</code></td><td>off</td><td>Leave files untouched and exit with status 1 when rewrites are available.</td></tr>
+                <tr><td><code>--barrel &lt;PATH&gt;</code></td><td>all</td><td>Limit rewrites to imports from one barrel.</td></tr>
+                <tr><td><code>--only &lt;GLOB&gt;</code></td><td>all</td><td>Limit importing files using a workspace-relative glob.</td></tr>
+                <tr><td><code>--import-style &lt;STYLE&gt;</code></td><td>config</td><td>Use alias, relative, or preserve for rewritten import specifiers.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="docs-section" id="configuration" aria-labelledby="configuration-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">06 / Configuration</p>
+          <h2 id="configuration-title">Defaults first. Overrides when needed.</h2>
+          <p>An <code>unstave.toml</code> file at the workspace root is optional. Unknown fields are rejected, and CLI flags override file values.</p>
+        </div>
+        <div class="docs-code">
+          <div class="docs-code-meta"><span>unstave.toml</span><button class="docs-copy" type="button" data-copy-target="config-example">Copy</button></div>
+          <pre><code id="config-example">entrypoints = ["src/main.tsx"]
+include = ["**/*.{ts,tsx}"]
+exclude = ["**/*.test.ts", "**/*.stories.tsx"]
+
+[barrel]
+reexport_ratio = 0.8
+max_own_decls = 2
+
+[thresholds]
+max_amplification = 5.0
+max_cycles = 0
+
+[codemod]
+import_style = "preserve"</code></pre>
+        </div>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead><tr><th>Field</th><th>Default</th><th>Behavior</th></tr></thead>
+            <tbody>
+              <tr><td><code>entrypoints</code></td><td>empty</td><td>Modules used for projected before-and-after reachability and dead-export exclusions.</td></tr>
+              <tr><td><code>include</code></td><td>JS and TS sources</td><td>Glob set used to discover source modules.</td></tr>
+              <tr><td><code>exclude</code></td><td>empty</td><td>Glob set removed from discovery in addition to built-in directory exclusions.</td></tr>
+              <tr><td><code>barrel.reexport_ratio</code></td><td>0.8</td><td>Minimum fraction of exports that must be re-exports.</td></tr>
+              <tr><td><code>barrel.max_own_decls</code></td><td>2</td><td>Maximum local declarations allowed when classifying a barrel.</td></tr>
+              <tr><td><code>thresholds.max_amplification</code></td><td>5.0</td><td>Informational reporting threshold in v0.1.0.</td></tr>
+              <tr><td><code>thresholds.max_cycles</code></td><td>0</td><td>Informational cycle threshold in v0.1.0.</td></tr>
+              <tr><td><code>codemod.import_style</code></td><td>preserve</td><td>Default alias, relative, or preserve strategy for rewritten imports.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="docs-section" id="safe-rewrites" aria-labelledby="safe-rewrites-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">07 / Safe rewrites</p>
+          <h2 id="safe-rewrites-title">A rewrite must be proven.</h2>
+          <p>unstave follows each imported symbol through the re-export graph and changes source only when the declaration target is unique and the transformation is structurally safe.</p>
+        </div>
+        <div class="docs-prose">
+          <h3>Rewrites preserve</h3>
+          <ul>
+            <li>Source bytes outside the affected import spans.</li>
+            <li>Imported aliases, default bindings, and type modifiers.</li>
+            <li>The configured or predominant alias-versus-relative path style.</li>
+            <li>Existing compatible imports from the same direct module.</li>
+          </ul>
+          <h3>Rewrites are skipped when</h3>
+          <ul>
+            <li>A symbol resolves to multiple possible declarations.</li>
+            <li>The import is a namespace import.</li>
+            <li>The re-export chain is cyclic or external.</li>
+            <li>The barrel has observed top-level side effects.</li>
+            <li>An existing namespace import cannot accept named bindings.</li>
+          </ul>
+        </div>
+        <div class="docs-code">
+          <div class="docs-code-meta"><span>Recommended workflow</span><button class="docs-copy" type="button" data-copy-target="safe-workflow-command">Copy</button></div>
+          <pre><code id="safe-workflow-command">unstave fix --root . --dry-run
+unstave fix --root . --barrel src/clients/index.ts --only 'src/app/**' --write
+unstave fix --root . --check</code></pre>
+        </div>
+      </section>
+
+      <section class="docs-section" id="integrations" aria-labelledby="integrations-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">08 / Integrations</p>
+          <h2 id="integrations-title">Use the engine where work happens.</h2>
+          <p>The native Node API runs analysis away from the main thread. The Vite plugin schedules the same analysis without blocking dev-server startup or HMR.</p>
+        </div>
+
+        <div class="docs-subsection">
+          <h3>Vite plugin</h3>
+          <p>Development analysis is enabled by default. Production builds remain opt-in.</p>
+          <div class="docs-code">
+            <div class="docs-code-meta"><span>vite.config.ts</span><button class="docs-copy" type="button" data-copy-target="vite-example">Copy</button></div>
+            <pre><code id="vite-example">import { defineConfig } from 'vite'
+import unstave from 'vite-plugin-unstave'
+
+export default defineConfig({
+  plugins: [
+    unstave({
+      warnAmplification: 5,
+      serveReport: true,
+      outDir: '.unstave',
+    }),
+  ],
+})</code></pre>
+          </div>
+          <div class="docs-table-wrap">
+            <table class="docs-table">
+              <thead><tr><th>Option</th><th>Default</th><th>Behavior</th></tr></thead>
+              <tbody>
+                <tr><td><code>enabled</code></td><td>dev only</td><td>Explicitly enable or disable analysis. Set true for production reports.</td></tr>
+                <tr><td><code>warnAmplification</code></td><td>5</td><td>Warn when a barrel exceeds this amplification ratio.</td></tr>
+                <tr><td><code>serveReport</code></td><td>true</td><td>Serve the live HTML report at <code>/__unstave</code>.</td></tr>
+                <tr><td><code>outDir</code></td><td><code>.unstave</code></td><td>Production JSON and HTML report directory relative to the Vite root.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="docs-subsection">
+          <h3>Native Node API</h3>
+          <p><code>analyze</code> returns the versioned report object. <code>renderHtml</code> turns that report into one portable HTML string.</p>
+          <div class="docs-code">
+            <div class="docs-code-meta"><span>analysis.mjs</span><button class="docs-copy" type="button" data-copy-target="node-example">Copy</button></div>
+            <pre><code id="node-example">import { analyze, renderHtml } from 'unstave'
+
+const report = await analyze({
+  root: '.',
+  includeTypeEdges: false,
+  noCache: false,
+})
+
+const html = await renderHtml(report)</code></pre>
+          </div>
+        </div>
+
+        <div class="docs-callout">
+          <strong>Need implementation detail?</strong>
+          <p>The repository README covers crate boundaries, benchmarks, release packaging, and contributor commands.</p>
+          <a class="text-link" href="https://github.com/eddiesr93/unstave#readme">Open the repository README</a>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <footer class="docs-footer">
+    <a class="wordmark footer-wordmark" href="#introduction" aria-label="Back to documentation introduction">
+      <span>UN</span><i aria-hidden="true"></i><span>STAVE</span>
+    </a>
+    <p>Module graph / disassembled.<br>MIT licensed. Built in Rust.</p>
+    <div class="footer-links">
+      <a href="../">Overview</a>
+      <a href="https://github.com/eddiesr93/unstave">GitHub</a>
+      <a href="https://github.com/eddiesr93/unstave/blob/main/LICENSE">License</a>
+    </div>
+    <p class="footer-mark">Measure.<br>Prove.<br>Rewrite.</p>
+  </footer>
+
+  <div class="copy-toast" role="status" aria-live="polite">Command copied</div>
+  <script src="./docs.js" defer></script>
+</body>
+</html>

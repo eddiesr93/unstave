@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
-  <title id="title">unstave — see what one import drags in</title>
+  <title id="title">unstave - see what one import drags in</title>
   <desc id="desc">A dark editorial card showing a TypeScript import expanding through three barrels into multiple modules.</desc>
   <rect width="1200" height="630" fill="#181b13"/>
   <path d="M0 1H1200M0 629H1200" stroke="#454b3c"/>
@@ -29,7 +29,7 @@
     </g>
     <g transform="translate(166 154)">
       <rect width="112" height="27" rx="2" fill="#bfff45"/>
-      <text x="56" y="19" text-anchor="middle" font-family="Menlo, monospace" font-size="13" font-weight="700" fill="#181b13">6.0× COST</text>
+      <text x="56" y="19" text-anchor="middle" font-family="Menlo, monospace" font-size="13" font-weight="700" fill="#181b13">6.0x COST</text>
     </g>
   </g>
 

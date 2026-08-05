@@ -2,7 +2,7 @@
 
 Module graph analyzer and barrel codemod for TypeScript/React monorepos.
 
-[Product site](https://eddiesr93.github.io/unstave/) · [Installation](#install) · [Usage](#usage)
+[Product site](https://eddiesr93.github.io/unstave/) · [Documentation](https://eddiesr93.github.io/unstave/docs/) · [Installation](#install) · [Usage](#usage)
 
 `unstave` builds the full module graph of your workspace, finds where barrel files
 (`index.ts` re-export hubs) are amplifying import cost, and rewrites those imports
