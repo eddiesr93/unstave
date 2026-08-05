@@ -3,4 +3,8 @@
 *.pending-snap
 .unstave/
 node_modules/
+# ...but fixture workspaces need their symlinked local packages committed,
+# otherwise cross-package resolution cannot be tested.
+!tests/fixtures/**/node_modules/
+!tests/fixtures/**/node_modules/**
 unstave-spec.md
