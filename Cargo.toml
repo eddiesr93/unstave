@@ -1,0 +1,42 @@
+[workspace]
+resolver = "2"
+members = ["crates/unstave-core", "crates/unstave-report", "crates/unstave-cli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/eddie-roman/unstave"
+rust-version = "1.82"
+
+[workspace.dependencies]
+unstave-core = { path = "crates/unstave-core", version = "0.1.0" }
+unstave-report = { path = "crates/unstave-report", version = "0.1.0" }
+
+# oxc crates release in lockstep — keep this single version pinned across the workspace.
+oxc_allocator = "=0.143.0"
+oxc_ast = "=0.143.0"
+oxc_ast_visit = "=0.143.0"
+oxc_parser = "=0.143.0"
+oxc_span = "=0.143.0"
+oxc_resolver = "11.24"
+
+anyhow = "1"
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+rayon = "1.10"
+dashmap = "6"
+petgraph = "0.8"
+ignore = "0.4"
+clap = { version = "4", features = ["derive"] }
+comfy-table = "8"
+owo-colors = "4"
+toml = "0.8"
+globset = "0.4"
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+insta = { version = "1", features = ["json", "filters"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

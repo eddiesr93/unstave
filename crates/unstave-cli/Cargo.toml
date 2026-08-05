@@ -1,0 +1,20 @@
+[package]
+name = "unstave-cli"
+description = "CLI for unstave: module graph analyzer and barrel codemod for TypeScript monorepos."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "unstave"
+path = "src/main.rs"
+
+[dependencies]
+unstave-core.workspace = true
+unstave-report.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+owo-colors.workspace = true
