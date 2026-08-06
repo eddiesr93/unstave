@@ -166,6 +166,44 @@ export const values: [typeof DefaultWidget, LocalWidget, User, LocalRole] | null
 }
 
 #[test]
+fn type_only_default_import_mixed_with_value_bindings_renders_valid_typescript() {
+    // A type-only default import plus a value named import from the same barrel
+    // both resolve to the same definition module. The codemod must never emit the
+    // invalid `import { type default as Widget, create }` form — the type-only
+    // default is split into its own `import type Widget from '...'` statement.
+    let root = fixture("type-default");
+    let config = Config::default();
+    let analysis = analyze(&root, &config).expect("fixture should analyze");
+    let graph = ModuleGraph::build(&analysis.modules);
+    let options = CodemodOptions {
+        import_style: ImportStyle::Relative,
+        ..CodemodOptions::default()
+    };
+
+    let result = plan(&analysis, &graph, &config, &options).expect("codemod should plan");
+
+    assert_eq!(result.files_changed(), 1);
+    assert_eq!(result.imports_rewritten, 2);
+    let rewritten = &result.files[0].rewritten;
+    assert!(
+        !rewritten.contains("type default as"),
+        "must never emit `type default as`: {rewritten}"
+    );
+    // Two candidate barrel imports merge into one replacement; the removed second
+    // import leaves its trailing newline behind, so a blank line remains between
+    // the rewritten imports and the body. The important invariant is that the
+    // type-only default is split into its own `import type` statement.
+    assert_eq!(
+        rewritten,
+        "import type Widget from './widget';\n\
+         import { create } from './widget';\n\
+         \n\
+         \n\
+         export const widget: Widget = create();\n"
+    );
+}
+
+#[test]
 fn follows_reexport_alias_chains_to_the_original_symbol() {
     let root = fixture("aliases");
     let config = Config::default();

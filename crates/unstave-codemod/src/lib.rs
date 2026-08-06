@@ -424,9 +424,16 @@ fn render_import(specifier: &str, bindings: &[Binding], statement_type_only: boo
     let can_use_default_clause = default.is_some_and(|binding| {
         (!binding.type_only && !statement_type_only) || (all_type_only && bindings.len() == 1)
     });
+    // A type-only default cannot share a statement with value bindings: `import {
+    // type default as X, foo }` is not valid TypeScript. It must be emitted as its
+    // own `import type X from '...'` statement so the default stays type-only while
+    // the remaining value bindings keep their own statement.
+    let type_only_default_split =
+        default.is_some_and(|binding| binding.type_only && !all_type_only);
+    let default_in_named = can_use_default_clause || type_only_default_split;
     let named = bindings
         .iter()
-        .filter(|binding| !can_use_default_clause || binding.imported != "default")
+        .filter(|binding| !(binding.imported == "default" && default_in_named))
         .map(|binding| {
             let prefix = if binding.type_only && !all_type_only {
                 "type "
@@ -442,19 +449,34 @@ fn render_import(specifier: &str, bindings: &[Binding], statement_type_only: boo
         .collect::<Vec<_>>()
         .join(", ");
 
+    let mut statements = Vec::new();
+    if type_only_default_split {
+        let default = default.expect("type_only_default_split implies a default binding");
+        statements.push(format!("import type {} from '{specifier}';", default.local));
+    }
+
     if can_use_default_clause {
         let default = default
             .map(|binding| binding.local.as_str())
             .unwrap_or("default");
         if named.is_empty() {
             let type_keyword = if all_type_only { " type" } else { "" };
-            return format!("import{type_keyword} {default} from '{specifier}';");
+            statements.push(format!(
+                "import{type_keyword} {default} from '{specifier}';"
+            ));
+        } else {
+            statements.push(format!(
+                "import {default}, {{ {named} }} from '{specifier}';"
+            ));
         }
-        return format!("import {default}, {{ {named} }} from '{specifier}';");
+    } else {
+        let type_keyword = if all_type_only { " type" } else { "" };
+        statements.push(format!(
+            "import{type_keyword} {{ {named} }} from '{specifier}';"
+        ));
     }
 
-    let type_keyword = if all_type_only { " type" } else { "" };
-    format!("import{type_keyword} {{ {named} }} from '{specifier}';")
+    statements.join("\n")
 }
 
 fn relative_specifier(importer: &Path, definition: &Path) -> String {
