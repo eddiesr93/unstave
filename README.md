@@ -164,8 +164,9 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo fmt --all
 ```
 
-The release benchmark generates 6000 TypeScript modules and enforces the cold
-and warm budgets from the specification:
+The release benchmark generates 6000 TypeScript modules and enforces the
+benchmark budgets — cold cache miss under 1500 ms, warm content-hash cache hit
+under 200 ms:
 
 ```bash
 cargo bench -p unstave-core --bench pipeline
