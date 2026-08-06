@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { analyze, renderHtml } from 'unstave'
-import type { AnalysisReport } from 'unstave'
+import { analyze, renderHtml } from '@unstave/node'
+import type { AnalysisReport } from '@unstave/node'
 import type { Plugin, ResolvedConfig, ViteDevServer } from 'vite'
 
 export interface UnstaveOptions {

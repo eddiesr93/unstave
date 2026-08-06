@@ -1,3 +1,3 @@
-# `unstave-darwin-arm64`
+# `@unstave/node-darwin-arm64`
 
-This is the **aarch64-apple-darwin** binary for `unstave`
+This is the **aarch64-apple-darwin** binary for `@unstave/node`

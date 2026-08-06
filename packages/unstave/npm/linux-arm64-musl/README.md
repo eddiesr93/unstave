@@ -1,3 +1,3 @@
-# `unstave-linux-arm64-musl`
+# `@unstave/node-linux-arm64-musl`
 
-This is the **aarch64-unknown-linux-musl** binary for `unstave`
+This is the **aarch64-unknown-linux-musl** binary for `@unstave/node`

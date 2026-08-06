@@ -112,8 +112,8 @@ brew install unstave</code></pre>
           <p>Install only the native API, only the Vite plugin, or both.</p>
           <div class="docs-code">
             <div class="docs-code-meta"><span>npm</span><button class="docs-copy" type="button" data-copy-target="install-node-command">Copy</button></div>
-            <pre><code id="install-node-command">npm install unstave
-npm install --save-dev vite-plugin-unstave</code></pre>
+            <pre><code id="install-node-command">npm install @unstave/node
+npm install --save-dev @unstave/vite-plugin</code></pre>
           </div>
         </div>
       </section>
@@ -308,7 +308,7 @@ unstave fix --root . --check</code></pre>
           <div class="docs-code">
             <div class="docs-code-meta"><span>vite.config.ts</span><button class="docs-copy" type="button" data-copy-target="vite-example">Copy</button></div>
             <pre><code id="vite-example">import { defineConfig } from 'vite'
-import unstave from 'vite-plugin-unstave'
+import unstave from '@unstave/vite-plugin'
 
 export default defineConfig({
   plugins: [
@@ -338,7 +338,7 @@ export default defineConfig({
           <p><code>analyze</code> returns the versioned report object. <code>renderHtml</code> turns that report into one portable HTML string.</p>
           <div class="docs-code">
             <div class="docs-code-meta"><span>analysis.mjs</span><button class="docs-copy" type="button" data-copy-target="node-example">Copy</button></div>
-            <pre><code id="node-example">import { analyze, renderHtml } from 'unstave'
+            <pre><code id="node-example">import { analyze, renderHtml } from '@unstave/node'
 
 const report = await analyze({
   root: '.',

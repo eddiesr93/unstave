@@ -34,6 +34,6 @@ jobs:
       - name: install JavaScript dependencies
         run: pnpm install --frozen-lockfile
       - name: build native binding and Vite plugin
-        run: pnpm --filter unstave build && pnpm --filter vite-plugin-unstave build
+        run: pnpm --filter @unstave/node build && pnpm --filter @unstave/vite-plugin build
       - name: test JavaScript packages
         run: pnpm test

@@ -1,6 +1,6 @@
 {
-  "name": "unstave-win32-x64-msvc",
-  "version": "0.1.0",
+  "name": "@unstave/node-win32-x64-msvc",
+  "version": "0.1.1",
   "cpu": [
     "x64"
   ],

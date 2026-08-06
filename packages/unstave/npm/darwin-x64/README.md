@@ -1,3 +1,3 @@
-# `unstave-darwin-x64`
+# `@unstave/node-darwin-x64`
 
-This is the **x86_64-apple-darwin** binary for `unstave`
+This is the **x86_64-apple-darwin** binary for `@unstave/node`

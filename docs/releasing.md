@@ -17,8 +17,8 @@ tag. The release workflow:
 1. validates the tag against every Cargo and npm manifest;
 2. publishes the Rust crates in dependency order;
 3. cross-compiles eight Node-API targets and tests the runnable bindings;
-4. publishes the platform npm packages, the `unstave` loader, and
-   `vite-plugin-unstave` with npm provenance.
+4. publishes the platform npm packages, the `@unstave/node` loader, and
+   `@unstave/vite-plugin` with npm provenance.
 
 The workflow needs `CARGO_REGISTRY_TOKEN` and `NPM_TOKEN` repository secrets. The
 GitHub-provided token is used for npm provenance and release metadata.

@@ -23,7 +23,7 @@ const localCandidates = [
 const localBinding = localCandidates.find(existsSync)
 
 try {
-  const binding = localBinding ? require(localBinding) : require(`unstave-${platform}`)
+  const binding = localBinding ? require(localBinding) : require(`@unstave/node-${platform}`)
   module.exports.analyze = binding.analyze
   module.exports.renderHtml = binding.renderHtml
 } catch (error) {

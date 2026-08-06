@@ -111,7 +111,7 @@ jobs:
       - name: Build native binding
         shell: bash
         run: >-
-          pnpm --filter unstave exec napi build
+          pnpm --filter @unstave/node exec napi build
           --release
           --platform
           --target ${{ matrix.target }}
@@ -167,7 +167,7 @@ jobs:
           name: bindings-${{ matrix.target }}
           path: packages/unstave
       - name: Test native binding
-        run: pnpm --filter unstave test
+        run: pnpm --filter @unstave/node test
 
   publish-npm:
     name: Publish npm packages
@@ -187,15 +187,15 @@ jobs:
       - name: Install JavaScript dependencies
         run: pnpm install --frozen-lockfile
       - name: Generate native package directories
-        run: pnpm --filter unstave create-npm-dirs
+        run: pnpm --filter @unstave/node create-npm-dirs
       - uses: actions/download-artifact@v8
         with:
           pattern: bindings-*
           path: artifacts
       - name: Place native artifacts in platform packages
-        run: pnpm --filter unstave exec napi artifacts --output-dir ../../artifacts --npm-dir npm
+        run: pnpm --filter @unstave/node exec napi artifacts --output-dir ../../artifacts --npm-dir npm
       - name: Build Vite plugin
-        run: pnpm --filter vite-plugin-unstave build
+        run: pnpm --filter @unstave/vite-plugin build
       - name: Publish native packages and loader
         working-directory: packages/unstave
         env:
@@ -206,4 +206,4 @@ jobs:
       - name: Publish Vite plugin
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm --filter vite-plugin-unstave publish --no-git-checks --access public --provenance
+        run: pnpm --filter @unstave/vite-plugin publish --no-git-checks --access public --provenance

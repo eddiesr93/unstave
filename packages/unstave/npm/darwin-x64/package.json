@@ -1,6 +1,6 @@
 {
-  "name": "unstave-darwin-x64",
-  "version": "0.1.0",
+  "name": "@unstave/node-darwin-x64",
+  "version": "0.1.1",
   "cpu": [
     "x64"
   ],

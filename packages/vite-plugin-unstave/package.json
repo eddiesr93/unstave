@@ -1,6 +1,6 @@
 {
-  "name": "vite-plugin-unstave",
-  "version": "0.1.0",
+  "name": "@unstave/vite-plugin",
+  "version": "0.1.1",
   "description": "Non-blocking unstave module-graph reports for Vite",
   "type": "module",
   "license": "MIT",
@@ -11,7 +11,9 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
@@ -25,7 +27,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "unstave": "workspace:*"
+    "@unstave/node": "workspace:*"
   },
   "peerDependencies": {
     "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"

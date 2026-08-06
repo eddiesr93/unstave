@@ -38,8 +38,8 @@ brew install unstave
 The native Node API and Vite integration are published separately:
 
 ```bash
-npm install unstave
-npm install --save-dev vite-plugin-unstave
+npm install @unstave/node
+npm install --save-dev @unstave/vite-plugin
 ```
 
 ## Usage
@@ -111,13 +111,13 @@ import_style = "preserve"
 
 ## Vite plugin
 
-`vite-plugin-unstave` runs the native analysis asynchronously, so Vite startup and
+`@unstave/vite-plugin` runs the native analysis asynchronously, so Vite startup and
 HMR do not wait for the module graph. In development it serves the live report at
 `/__unstave`; production analysis is opt-in and writes JSON plus HTML at `buildEnd`.
 
 ```ts
 import { defineConfig } from 'vite'
-import unstave from 'vite-plugin-unstave'
+import unstave from '@unstave/vite-plugin'
 
 export default defineConfig({
   plugins: [
