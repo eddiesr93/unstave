@@ -1757,7 +1757,6 @@ dependencies = [
 name = "unstave-core"
 version = "0.1.2"
 dependencies = [
- "dashmap",
  "fixedbitset",
  "globset",
  "ignore",

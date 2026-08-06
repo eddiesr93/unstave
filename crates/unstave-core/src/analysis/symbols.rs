@@ -1,7 +1,7 @@
+use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
-use dashmap::DashMap;
 use petgraph::graph::NodeIndex;
 use serde::{Deserialize, Serialize};
 
@@ -54,7 +54,7 @@ pub struct SymbolResolver<'a> {
     imported_names: HashMap<NodeIndex, HashMap<String, (String, String)>>,
     /// Specifier → resolution, per module.
     specifier_targets: HashMap<NodeIndex, HashMap<String, Resolved>>,
-    memo: DashMap<(NodeIndex, String), Resolution>,
+    memo: RefCell<HashMap<(NodeIndex, String), Resolution>>,
 }
 
 impl<'a> SymbolResolver<'a> {
@@ -88,7 +88,7 @@ impl<'a> SymbolResolver<'a> {
             graph,
             imported_names,
             specifier_targets,
-            memo: DashMap::new(),
+            memo: RefCell::new(HashMap::new()),
         }
     }
 
@@ -106,7 +106,7 @@ impl<'a> SymbolResolver<'a> {
     ) -> Resolution {
         let key = (module, name.to_string());
 
-        if let Some(hit) = self.memo.get(&key) {
+        if let Some(hit) = self.memo.borrow().get(&key) {
             return hit.clone();
         }
         if !visiting.insert(key.clone()) {
@@ -121,7 +121,7 @@ impl<'a> SymbolResolver<'a> {
         // could poison an unrelated call site. Caching it is still *safe* — it only
         // ever makes the codemod skip more — but recomputing keeps reports precise.
         if resolution != Resolution::Cyclic {
-            self.memo.insert(key, resolution.clone());
+            self.memo.borrow_mut().insert(key, resolution.clone());
         }
         resolution
     }

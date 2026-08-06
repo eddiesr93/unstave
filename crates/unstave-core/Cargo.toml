@@ -23,7 +23,6 @@ thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 rayon.workspace = true
-dashmap.workspace = true
 petgraph.workspace = true
 fixedbitset.workspace = true
 ignore.workspace = true
