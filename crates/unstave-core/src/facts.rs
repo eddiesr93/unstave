@@ -122,9 +122,15 @@ impl ImportRecord {
     rename_all_fields = "camelCase"
 )]
 pub enum ExportRecord {
-    /// Declared in this module.
+    /// Declared in this module, or forwarded from a top-level import of this module.
+    ///
+    /// `name` is what importers see; `local` is the binding it points at *before*
+    /// any `as` alias is applied. For `export const x = 1` and `export { x }` the two
+    /// are identical; for `export { foo as bar }` `name` is `bar` and `local` is
+    /// `foo`. The resolver follows `local` when it is itself an imported name.
     Local {
         name: String,
+        local: String,
         type_only: bool,
     },
     /// `export { imported as name } from "from"`.

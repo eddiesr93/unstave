@@ -89,6 +89,21 @@ fn follows_alias_chains_through_two_barrels() {
 }
 
 #[test]
+fn resolves_aliased_local_reexport_to_the_real_module() {
+    // `src/index.ts` does `import { foo } from './impl'; export { foo as bar };`.
+    // `bar` is a local alias of the imported `foo`, so it must resolve to `impl.ts`,
+    // not back to the barrel itself. Previously the resolver looked up the *alias*
+    // (`bar`) among the barrel's imports and fell back to the barrel.
+    let ctx = ctx("local-alias");
+    let r = ctx.resolver();
+
+    assert_eq!(ctx.define(&r, "src/index.ts", "bar"), "src/impl.ts#foo");
+
+    // A plain (non-aliased) local re-export still resolves the same way.
+    assert_eq!(ctx.define(&r, "src/index.ts", "one"), "src/one.ts#one");
+}
+
+#[test]
 fn follows_star_reexports_three_barrels_deep() {
     let ctx = ctx("nested-barrels");
     let r = ctx.resolver();

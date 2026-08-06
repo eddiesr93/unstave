@@ -146,6 +146,29 @@ fn follows_reexport_alias_chains_to_the_original_symbol() {
 }
 
 #[test]
+fn rewrites_aliased_local_reexport_to_the_defining_module() {
+    // `src/index.ts` re-exports the imported `foo` under a new local alias:
+    // `import { foo } from './impl'; export { foo as bar };`. A consumer importing
+    // `bar` must be re-pointed at `./impl`, not left pointed at the barrel.
+    let root = fixture("local-alias");
+    let config = Config::default();
+    let analysis = analyze(&root, &config).expect("fixture should analyze");
+    let graph = ModuleGraph::build(&analysis.modules);
+    let options = CodemodOptions {
+        import_style: ImportStyle::Relative,
+        ..CodemodOptions::default()
+    };
+
+    let result = plan(&analysis, &graph, &config, &options).expect("codemod should plan");
+
+    assert_eq!(result.files_changed(), 1);
+    assert_eq!(
+        result.files[0].rewritten,
+        "import { foo as bar } from './impl';\n\nexport const used = bar;\n"
+    );
+}
+
+#[test]
 fn merges_rewritten_bindings_into_an_existing_direct_import() {
     let root = fixture("codemod-merge");
     let config = Config::default();

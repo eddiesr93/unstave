@@ -61,10 +61,12 @@ impl Extractor<'_> {
             Statement::ExportNamedDeclaration(decl) => {
                 let type_only = decl.export_kind.is_type();
                 for spec in &decl.specifiers {
-                    // The symbol resolver follows the import chain if the local name
-                    // was itself imported, so a local record is enough here.
+                    // The local name before any `as` alias is what the symbol resolver
+                    // uses to follow the import chain (e.g. `export { foo as bar }`
+                    // with `import { foo } from './x'` resolves `bar` to `./x`).
                     self.facts.exports.push(ExportRecord::Local {
                         name: module_export_name(&spec.exported),
+                        local: module_export_name(&spec.local),
                         type_only: type_only || spec.export_kind.is_type(),
                     });
                 }
@@ -152,9 +154,11 @@ impl Extractor<'_> {
         let type_only = is_type_declaration(inner);
         for name in declared_names(inner) {
             self.facts.own_decl_count += 1;
-            self.facts
-                .exports
-                .push(ExportRecord::Local { name, type_only });
+            self.facts.exports.push(ExportRecord::Local {
+                name: name.clone(),
+                local: name,
+                type_only,
+            });
         }
     }
 

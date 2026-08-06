@@ -12,6 +12,7 @@ expression: "snapshot_fixture(\"simple\").join(\"\\n\")"
     {
       "kind": "local",
       "name": "greet",
+      "local": "greet",
       "typeOnly": false
     }
   ],
@@ -76,16 +77,19 @@ expression: "snapshot_fixture(\"simple\").join(\"\\n\")"
     {
       "kind": "local",
       "name": "result",
+      "local": "result",
       "typeOnly": false
     },
     {
       "kind": "local",
       "name": "message",
+      "local": "message",
       "typeOnly": false
     },
     {
       "kind": "local",
       "name": "reader",
+      "local": "reader",
       "typeOnly": false
     }
   ],
@@ -114,6 +118,7 @@ expression: "snapshot_fixture(\"simple\").join(\"\\n\")"
     {
       "kind": "local",
       "name": "add",
+      "local": "add",
       "typeOnly": false
     }
   ],

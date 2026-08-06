@@ -89,10 +89,12 @@ fn distinguishes_reexports_from_local_declarations() {
             },
             ExportRecord::Local {
                 name: "local".into(),
+                local: "local".into(),
                 type_only: false
             },
             ExportRecord::Local {
                 name: "Alias".into(),
+                local: "Alias".into(),
                 type_only: true
             },
             ExportRecord::Default,

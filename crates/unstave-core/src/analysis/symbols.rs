@@ -140,9 +140,11 @@ impl<'a> SymbolResolver<'a> {
                 continue;
             }
             return match export {
-                ExportRecord::Local { .. } | ExportRecord::Default => {
-                    self.resolve_local(module, name, visiting)
-                }
+                // Follow the local (pre-alias) binding: for `export { foo as bar }`
+                // where `foo` is imported, `bar` must resolve through `foo`, not to
+                // this module itself.
+                ExportRecord::Local { local, .. } => self.resolve_local(module, local, visiting),
+                ExportRecord::Default => self.resolve_local(module, name, visiting),
                 ExportRecord::Named { imported, from, .. } => {
                     self.follow(module, from, imported, visiting)
                 }
@@ -168,22 +170,26 @@ impl<'a> SymbolResolver<'a> {
 
     /// A name the module exports without a `from` clause. It may still have been
     /// imported at the top of the file, in which case that chain is followed.
+    ///
+    /// `local` is the binding name *before* any `as` alias (for `export { x }` this
+    /// equals the exported name; for `export { foo as bar }` it is `foo`), which is
+    /// the name to look up among the module's imports.
     fn resolve_local(
         &self,
         module: NodeIndex,
-        name: &str,
+        local: &str,
         visiting: &mut HashSet<(NodeIndex, String)>,
     ) -> Resolution {
         if let Some((specifier, imported)) = self
             .imported_names
             .get(&module)
-            .and_then(|locals| locals.get(name))
+            .and_then(|locals| locals.get(local))
         {
             return self.follow(module, specifier, imported, visiting);
         }
         Resolution::Definition {
             module: self.graph.path_of(module).to_path_buf(),
-            name: name.to_string(),
+            name: local.to_string(),
         }
     }
 

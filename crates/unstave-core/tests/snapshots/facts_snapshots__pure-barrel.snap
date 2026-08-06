@@ -12,6 +12,7 @@ expression: "snapshot_fixture(\"pure-barrel\").join(\"\\n\")"
     {
       "kind": "local",
       "name": "AlphaClient",
+      "local": "AlphaClient",
       "typeOnly": false
     }
   ],
@@ -27,6 +28,7 @@ expression: "snapshot_fixture(\"pure-barrel\").join(\"\\n\")"
     {
       "kind": "local",
       "name": "BetaClient",
+      "local": "BetaClient",
       "typeOnly": false
     }
   ],
@@ -42,6 +44,7 @@ expression: "snapshot_fixture(\"pure-barrel\").join(\"\\n\")"
     {
       "kind": "local",
       "name": "DeltaClient",
+      "local": "DeltaClient",
       "typeOnly": false
     }
   ],
@@ -57,6 +60,7 @@ expression: "snapshot_fixture(\"pure-barrel\").join(\"\\n\")"
     {
       "kind": "local",
       "name": "EpsilonClient",
+      "local": "EpsilonClient",
       "typeOnly": false
     }
   ],
@@ -72,6 +76,7 @@ expression: "snapshot_fixture(\"pure-barrel\").join(\"\\n\")"
     {
       "kind": "local",
       "name": "GammaClient",
+      "local": "GammaClient",
       "typeOnly": false
     }
   ],
@@ -170,6 +175,7 @@ expression: "snapshot_fixture(\"pure-barrel\").join(\"\\n\")"
     {
       "kind": "local",
       "name": "client",
+      "local": "client",
       "typeOnly": false
     }
   ],
