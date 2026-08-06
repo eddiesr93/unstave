@@ -169,7 +169,15 @@ impl ResolverSet {
         if let Some(package) = node_modules_package(&path) {
             return Resolved::External { path, package };
         }
-        if path.starts_with(&self.root) {
+        // Compare in the same canonical form the graph uses to key its node index, so
+        // a resolved path that discovery would spell slightly differently on Windows
+        // (back/forward slashes, `\\?\` prefix, drive or component case, uncollapsed
+        // `..`) still counts as inside the workspace. A raw `Path::starts_with` is
+        // byte- and case-sensitive and would misclassify such a path as external,
+        // silently dropping every edge into it before the graph index is even built.
+        let key = crate::graph::module_path_key(&path);
+        let root = crate::graph::module_path_key(&self.root);
+        if key == root || key.starts_with(&format!("{root}/")) {
             Resolved::Internal { path }
         } else {
             // Resolved cleanly but landed outside the workspace — a linked package or

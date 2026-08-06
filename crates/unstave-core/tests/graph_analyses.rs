@@ -212,13 +212,29 @@ fn ranks_fan_in_and_fan_out() {
 
 /// Regression: the native binding's `includeTypeEdges` test builds its assertion on
 /// fan-in membership for a type-only re-export chain. If the graph ever dropped the
-/// type-only edges into a type-only module (e.g. because a resolved path's separators
-/// stopped matching the canonicalised discovery path on Windows), the module would
-/// disappear from fan-in. Guard that the edges — and therefore the fan-in — behave the
-/// same here as they do on every platform.
+/// type-only edges into a type-only module (e.g. because a resolved path stopped
+/// matching the canonicalised discovery path on Windows), the module would disappear
+/// from fan-in. Guard that the edges — and therefore the fan-in — behave the same
+/// here as they do on every platform.
+///
+/// This fixture is the canonical cross-platform regression: `main.ts` reaches the
+/// barrel through the `@/*` tsconfig `paths` alias, and the barrel + `load` reach
+/// `ThingDto` only through type-only edges. If the alias or a type-only edge fails to
+/// resolve to a discovered module on any platform, `ThingDto` vanishes from fan-in.
 #[test]
 fn type_only_reexport_module_enters_fan_in_only_with_type_edges() {
     let built = build("type-reexport");
+
+    // The alias import in `main.ts` must form an edge to the barrel — the whole chain
+    // depends on `@/clients` resolving to `src/clients/index.ts`. It is asserted
+    // explicitly (rather than only transitively through fan-in) so a failure of the
+    // alias edge is reported against the alias, not as a missing fan-in entry.
+    let main = built.node("src/main.ts");
+    let barrel = built.node("src/clients/index.ts");
+    assert!(
+        built.graph.successors(main, true).contains(&barrel),
+        "`@/clients` must resolve to the barrel (src/clients/index.ts)"
+    );
 
     let in_fan = |report: &fan::FanReport| {
         report

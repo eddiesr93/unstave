@@ -50,7 +50,7 @@ impl ModuleNode {
 /// cost, and keeping them out keeps every traversal on internal modules only.
 pub struct ModuleGraph {
     graph: StableDiGraph<ModuleNode, EdgeKind>,
-    index: HashMap<PathBuf, NodeIndex>,
+    index: HashMap<String, NodeIndex>,
     /// Imports pointing at a path that resolved but was not discovered as a module —
     /// usually an `exclude` glob that hid the target.
     dangling: Vec<(PathBuf, PathBuf)>,
@@ -66,7 +66,7 @@ impl ModuleGraph {
                 path: module.facts.path.clone(),
                 facts: module.facts.clone(),
             });
-            index.insert(module_key(&module.facts.path), idx);
+            index.insert(module_path_key(&module.facts.path), idx);
         }
 
         let mut dangling = Vec::new();
@@ -75,7 +75,7 @@ impl ModuleGraph {
         let mut seen = std::collections::HashSet::new();
 
         for module in modules {
-            let Some(&from) = index.get(&module_key(&module.facts.path)) else {
+            let Some(&from) = index.get(&module_path_key(&module.facts.path)) else {
                 continue;
             };
 
@@ -86,7 +86,7 @@ impl ModuleGraph {
                 let Resolved::Internal { path } = resolved else {
                     continue;
                 };
-                match index.get(&module_key(path)) {
+                match index.get(&module_path_key(path)) {
                     Some(&to) => {
                         if seen.insert((from, to, kind)) {
                             graph.add_edge(from, to, kind);
@@ -120,7 +120,7 @@ impl ModuleGraph {
     }
 
     pub fn index_of(&self, path: &Path) -> Option<NodeIndex> {
-        self.index.get(&module_key(path)).copied()
+        self.index.get(&module_path_key(path)).copied()
     }
 
     pub fn node(&self, idx: NodeIndex) -> &ModuleNode {
@@ -269,16 +269,159 @@ fn edge_kinds(facts: &ModuleFacts) -> Vec<(&str, EdgeKind)> {
     edges
 }
 
-/// Canonical key for a module path used by the graph's node index.
+/// Canonical identity for a module path, used wherever a path is compared or hashed
+/// across the two sides that produce module paths: discovery (which yields the
+/// canonicalised filesystem paths stored on each module) and the resolver (which
+/// yields the resolved target of an import specifier).
 ///
-/// Module paths enter the graph from two sources: the canonicalised paths produced by
-/// discovery, and the paths returned by the resolver. On Windows the resolver can emit
-/// paths whose separators differ from the canonical form (a `src/clients/x.ts` produced
-/// from a `tsconfig` `paths` alias may arrive with `/` where discovery uses `\`). Keying
-/// the index by a separator-normalised path keeps the two sources comparable, so graph
-/// edges (and the fan-in/fan-out built from them) are identical on every platform. The
-/// stored [`ModuleNode::path`] is left untouched — native separators are only an issue
-/// for the index comparison, not for display (report paths are normalised separately).
-fn module_key(path: &Path) -> PathBuf {
-    PathBuf::from(path.to_string_lossy().replace('\\', "/"))
+/// The two sides must agree on whether a resolved specifier points at a discovered
+/// module, and on POSIX they normally do — but on Windows the *same file* can be
+/// spelled in several ways that raw byte comparison (or separator-only
+/// normalisation) treats as different: forward vs back slashes, a `\\?\`
+/// extended-length prefix, a differing drive-letter or path-component case (the NTFS
+/// filesystem is case-insensitive), or `.`/`..` segments that have not been
+/// collapsed. Discovery and the resolver each canonicalise the "same" path
+/// independently, so without a shared key the resolved target can silently fail to
+/// match the discovered module and the edge is dropped — exactly the
+/// `includeTypeEdges` regression seen on Windows, where the graph node index was
+/// already separator-normalised but the *classification* of a resolved path as
+/// internal (and hence its presence as a graph edge at all) was still being decided
+/// by a raw, case-sensitive comparison. Folding every spelling into one key makes the
+/// graph (and the fan-in/fan-out built from it) identical on every platform. The
+/// stored [`ModuleNode::path`] is left untouched — this key is only for comparison
+/// and hashing, not for display (report paths are normalised separately).
+pub(crate) fn module_path_key(path: &Path) -> String {
+    let mut s = path.to_string_lossy().replace('\\', "/");
+    // Strip a Windows extended-length (`\\?\`) prefix so `\\?\C:\a` and `C:\a` agree.
+    if let Some(stripped) = s.strip_prefix("//?/") {
+        s = stripped.to_string();
+    }
+    // Collapse `.` and `..` segments so `a/../b` and `b` agree. Dropping empty
+    // segments also folds doubled separators; a leading `/` is restored below so an
+    // absolute `/a/b` stays distinct from a relative `a/b`.
+    let was_absolute = s.starts_with('/');
+    let mut parts: Vec<&str> = Vec::new();
+    for part in s.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                parts.pop();
+            }
+            p => parts.push(p),
+        }
+    }
+    let mut normalized = parts.join("/");
+    if was_absolute && !normalized.starts_with('/') {
+        normalized.insert(0, '/');
+    }
+    // Windows paths are case-insensitive; discovery and the resolver may disagree on
+    // case, so fold to a canonical case there. Never on other platforms, where case is
+    // significant and two distinct modules could legitimately differ only by case.
+    #[cfg(windows)]
+    {
+        normalized.make_ascii_lowercase();
+    }
+    normalized
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn module_path_key_collapses_all_windows_spellings_to_one_form() {
+        // The fixture's type-only chain, spelled the way discovery emits it on POSIX.
+        let posix = module_path_key(Path::new(
+            "/repo/tests/fixtures/type-reexport/src/clients/models/ThingDto.ts",
+        ));
+        assert_eq!(
+            posix,
+            "/repo/tests/fixtures/type-reexport/src/clients/models/ThingDto.ts"
+        );
+
+        // The same file as Windows discovery (backslashes) and as the resolver may
+        // spell it (forward slashes, an extended-length `\\?\` prefix, or `..`).
+        let backslashes = module_path_key(Path::new(
+            r"C:\repo\tests\fixtures\type-reexport\src\clients\models\ThingDto.ts",
+        ));
+        let forwards = module_path_key(Path::new(
+            "C:/repo/tests/fixtures/type-reexport/src/clients/models/ThingDto.ts",
+        ));
+        let verbatim = module_path_key(Path::new(
+            r"\\?\C:\repo\tests\fixtures\type-reexport\src\clients\models\ThingDto.ts",
+        ));
+        let dotdot = module_path_key(Path::new(
+            "C:/repo/tests/fixtures/type-reexport/./src/clients/../clients/models/ThingDto.ts",
+        ));
+
+        // On every platform the three Windows spellings collapse to one key; on
+        // Windows the case-folding makes a differently-cased spelling agree too.
+        assert_eq!(backslashes, forwards);
+        assert_eq!(forwards, verbatim);
+        assert_eq!(forwards, dotdot);
+        #[cfg(windows)]
+        {
+            assert_eq!(
+                module_path_key(Path::new(
+                    "c:/REPO/TESTS/FIXTURES/TYPE-REEXPORT/SRC/CLIENTS/MODELS/THINGDTO.TS"
+                )),
+                forwards,
+            );
+        }
+
+        // Absolute vs relative stay distinct (collapsing must not merge them).
+        assert_ne!(
+            module_path_key(Path::new("/a/b")),
+            module_path_key(Path::new("a/b"))
+        );
+    }
+
+    #[test]
+    fn graph_index_joins_discovery_and_resolver_spellings_of_the_same_module() {
+        // Discovery emits the module with backslash separators (Windows form); the
+        // resolver reports the same target with forward slashes. Before the canonical
+        // key these never matched and the edge (and so the fan-in) was dropped.
+        use crate::facts::{ImportKind, ImportRecord, ModuleFacts};
+        use crate::pipeline::Module;
+        use crate::resolve::Resolved;
+        use std::collections::BTreeMap;
+
+        let importer = Path::new(r"C:\repo\src\clients\index.ts").to_path_buf();
+        let target = Path::new("C:/repo/src/clients/models/ThingDto.ts").to_path_buf();
+
+        let mut importer_facts = ModuleFacts::empty(importer.clone());
+        importer_facts.imports.push(ImportRecord {
+            specifier: "./models/ThingDto".to_string(),
+            kind: ImportKind::Named,
+            type_only: true,
+            bindings: Vec::new(),
+            span: crate::facts::Span::new(0, 0),
+        });
+        let mut resolutions = BTreeMap::new();
+        resolutions.insert(
+            "./models/ThingDto".to_string(),
+            Resolved::Internal {
+                path: target.clone(),
+            },
+        );
+
+        let importer = Module {
+            facts: importer_facts,
+            resolutions,
+        };
+        let target_facts = ModuleFacts::empty(target);
+        let target_module = Module {
+            facts: target_facts,
+            resolutions: BTreeMap::new(),
+        };
+
+        let graph = ModuleGraph::build(&[importer, target_module]);
+        assert_eq!(graph.node_count(), 2);
+        assert_eq!(
+            graph.edge_count(),
+            1,
+            "the resolved target must match the discovered node"
+        );
+        assert_eq!(graph.dangling().len(), 0);
+    }
 }
