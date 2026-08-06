@@ -1,7 +1,8 @@
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 
 use globset::{Glob, GlobSet, GlobSetBuilder};
-use ignore::WalkBuilder;
+use ignore::{ParallelVisitor, ParallelVisitorBuilder, WalkBuilder, WalkState};
 
 use crate::config::{Config, ALWAYS_EXCLUDE_DIRS};
 use crate::error::{Error, Result};
@@ -93,29 +94,29 @@ pub fn discover(root: &Path, config: &Config) -> Result<Workspace> {
         true
     });
 
-    let mut files = Vec::new();
-    let mut package_jsons = Vec::new();
+    // Walking a deep workspace is dominated by directory reads, so it runs across
+    // threads. Each visitor accumulates locally and merges once when it is dropped:
+    // a per-file channel send costs more than the walk saves on shallow trees.
+    let collected = Mutex::new(Collected::default());
+    let mut visitors = VisitorBuilder {
+        root: &root,
+        include: &include,
+        exclude: &exclude,
+        collected: &collected,
+    };
+    builder.build_parallel().visit(&mut visitors);
 
-    for entry in builder.build() {
-        let entry = entry.map_err(|source| Error::Walk {
+    let Collected {
+        mut files,
+        mut package_jsons,
+        error,
+    } = collected.into_inner().unwrap_or_default();
+
+    if let Some(source) = error {
+        return Err(Error::Walk {
             root: root.clone(),
             source,
-        })?;
-        if !entry.file_type().is_some_and(|t| t.is_file()) {
-            continue;
-        }
-        let path = entry.into_path();
-
-        if path.file_name().is_some_and(|n| n == "package.json") {
-            package_jsons.push(path);
-            continue;
-        }
-
-        // Globs match on the workspace-relative path so patterns like `src/**/*.ts` work.
-        let rel = path.strip_prefix(&root).unwrap_or(&path);
-        if include.is_match(rel) && !exclude.is_match(rel) {
-            files.push(path);
-        }
+        });
     }
 
     // Deterministic order regardless of filesystem iteration order.
@@ -132,6 +133,89 @@ pub fn discover(root: &Path, config: &Config) -> Result<Workspace> {
         packages,
         files,
     })
+}
+
+/// What the parallel walk produces, merged from every visitor.
+#[derive(Default)]
+struct Collected {
+    files: Vec<PathBuf>,
+    package_jsons: Vec<PathBuf>,
+    error: Option<ignore::Error>,
+}
+
+struct VisitorBuilder<'a> {
+    root: &'a Path,
+    include: &'a GlobSet,
+    exclude: &'a GlobSet,
+    collected: &'a Mutex<Collected>,
+}
+
+impl<'a, 's> ParallelVisitorBuilder<'s> for VisitorBuilder<'a>
+where
+    'a: 's,
+{
+    fn build(&mut self) -> Box<dyn ParallelVisitor + 's> {
+        Box::new(Visitor {
+            root: self.root,
+            include: self.include,
+            exclude: self.exclude,
+            collected: self.collected,
+            files: Vec::new(),
+            package_jsons: Vec::new(),
+            error: None,
+        })
+    }
+}
+
+struct Visitor<'a> {
+    root: &'a Path,
+    include: &'a GlobSet,
+    exclude: &'a GlobSet,
+    collected: &'a Mutex<Collected>,
+    files: Vec<PathBuf>,
+    package_jsons: Vec<PathBuf>,
+    error: Option<ignore::Error>,
+}
+
+impl ParallelVisitor for Visitor<'_> {
+    fn visit(&mut self, result: std::result::Result<ignore::DirEntry, ignore::Error>) -> WalkState {
+        let entry = match result {
+            Ok(entry) => entry,
+            Err(source) => {
+                self.error.get_or_insert(source);
+                return WalkState::Quit;
+            }
+        };
+        if !entry.file_type().is_some_and(|t| t.is_file()) {
+            return WalkState::Continue;
+        }
+        let path = entry.into_path();
+
+        if path.file_name().is_some_and(|n| n == "package.json") {
+            self.package_jsons.push(path);
+            return WalkState::Continue;
+        }
+
+        // Globs match on the workspace-relative path so patterns like `src/**/*.ts` work.
+        let rel = path.strip_prefix(self.root).unwrap_or(&path);
+        if self.include.is_match(rel) && !self.exclude.is_match(rel) {
+            self.files.push(path);
+        }
+        WalkState::Continue
+    }
+}
+
+impl Drop for Visitor<'_> {
+    fn drop(&mut self) {
+        let Ok(mut collected) = self.collected.lock() else {
+            return;
+        };
+        collected.files.append(&mut self.files);
+        collected.package_jsons.append(&mut self.package_jsons);
+        if let Some(error) = self.error.take() {
+            collected.error.get_or_insert(error);
+        }
+    }
 }
 
 /// Recognise the workspace layout from its root manifests.

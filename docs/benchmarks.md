@@ -1,7 +1,7 @@
 # Performance benchmark
 
-Measured 2026-08-05 on an Apple M4 Pro MacBook Pro (14 cores, 24 GB RAM),
-macOS 26.5.2, using Rust 1.95.0 in the release/bench profile.
+Measured 2026-08-06 on an Apple M4 Pro MacBook Pro (14 cores, 24 GB RAM),
+macOS 26.5.2, using Rust 1.97.1 in the release/bench profile.
 
 ## 6000-file acceptance benchmark
 
@@ -11,24 +11,31 @@ consumers. Generation time is excluded from the analysis measurement.
 
 | Run | Actual | Budget | Result |
 |---|---:|---:|---|
-| Cold, cache miss | 182.2 ms | < 1500 ms | pass |
-| Warm, content-hash cache hit | 90.7 ms | < 200 ms | pass |
+| Cold, cache miss | 234.0 ms | < 1500 ms | pass |
+| Warm, content-hash cache hit | 117.4 ms | < 200 ms | pass |
 
-The benchmark executable exits non-zero when either budget is exceeded. It also
-asserts the exact module count and verifies that the warm run was a real cache
-hit.
+Median of three consecutive runs. The benchmark executable exits non-zero when
+either budget is exceeded. It also asserts the exact module count and verifies
+that the warm run was a real cache hit.
 
-## End-to-end CLI check
+The generated tree is deliberately wide and shallow — 6000 files across about 40
+directories — so it exercises parsing far more than directory traversal. Real
+workspaces are deeper, which is where the parallel walk matters; see below.
 
-The larger pre-existing synthetic generator produces 6002 modules and a 5.7 MB
-JSON report. Running the release CLI, including graph analyses, JSON rendering,
-and writing that report, measured:
+## Real workspace
 
-| Run | Wall time | Cache state |
-|---|---:|---|
-| Cold | 0.51 s | miss |
-| Warm | 0.11 s | hit |
+A private 5129-module Vite/React application, analyzed with the release CLI.
+Phase timings come from the report's own `timings` block, median of three runs.
 
-These are observed single-run wall-clock measurements, not estimates. They are
-kept separate from the guarded core benchmark because output format and disk
-write size are caller-controlled costs.
+| Phase | Before parallel discovery | After |
+|---|---:|---:|
+| Discovery | 170 ms | 45 ms |
+| Warm total | 327 ms | 129 ms |
+
+The warm path re-walks the workspace and re-hashes file contents to decide
+whether the cache is still valid, so discovery is paid on every run, hit or
+miss. Making the walk parallel is what brought the warm total under the 200 ms
+budget on a real tree. Cache load itself is 9 ms for an 11 MB archive; the
+fingerprint pass over 11.8 MB of sources is about 75 ms.
+
+These are observed measurements, not estimates.

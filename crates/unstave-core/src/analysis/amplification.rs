@@ -174,7 +174,7 @@ pub fn compute(
     });
 
     let barrels_report = aggregate(&sites, barrels);
-    let entrypoints = project_entrypoints(graph, &forward, &sites, entrypoints);
+    let entrypoints = project_entrypoints(graph, &forward, &sites, entrypoints, include_type_edges);
     let skipped_by_reason = count_skips(&sites);
 
     AmplificationReport {
@@ -309,6 +309,7 @@ fn project_entrypoints(
     forward: &Reachability,
     sites: &[ImportSite],
     entrypoints: &[PathBuf],
+    include_type_edges: bool,
 ) -> Vec<EntrypointProjection> {
     if entrypoints.is_empty() {
         return Vec::new();
@@ -330,7 +331,7 @@ fn project_entrypoints(
         .filter_map(|entry| {
             let node = graph.index_of(entry)?;
             let before = forward.count(node) + 1;
-            let after = projected_closure(graph, &rewrites, node);
+            let after = projected_closure(graph, forward, &rewrites, node, include_type_edges);
             Some(EntrypointProjection {
                 entrypoint: entry.clone(),
                 before,
@@ -343,8 +344,10 @@ fn project_entrypoints(
 /// BFS from `entry` over the graph as it would be after rewriting.
 fn projected_closure(
     graph: &ModuleGraph,
+    forward: &Reachability,
     rewrites: &HashMap<PathBuf, HashMap<PathBuf, Vec<PathBuf>>>,
     entry: NodeIndex,
+    include_type_edges: bool,
 ) -> usize {
     let mut seen = std::collections::HashSet::new();
     let mut queue = std::collections::VecDeque::new();
@@ -355,17 +358,25 @@ fn projected_closure(
         let path = graph.path_of(node).to_path_buf();
         let redirects = rewrites.get(&path);
 
-        for next in graph.successors(node, false) {
+        for next in graph.successors(node, include_type_edges) {
             let next_path = graph.path_of(next).to_path_buf();
 
             // If this importer's edge to that barrel is fully rewritable, the barrel
             // and its closure are replaced by the definition sites.
             if let Some(targets) = redirects.and_then(|r| r.get(&next_path)) {
                 for target in targets {
-                    if let Some(target_node) = graph.index_of(target) {
-                        if seen.insert(target_node) {
-                            queue.push_back(target_node);
-                        }
+                    let Some(target_node) = graph.index_of(target) else {
+                        continue;
+                    };
+                    // The definition may sit behind a re-export this edge filter drops
+                    // — a `export type { X }` chain when type edges are excluded. Such
+                    // a module was never in the "before" closure, so counting it here
+                    // would make the projection grow instead of shrink.
+                    if !forward.reaches(next, target_node) {
+                        continue;
+                    }
+                    if seen.insert(target_node) {
+                        queue.push_back(target_node);
                     }
                 }
                 continue;

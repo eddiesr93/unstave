@@ -26,4 +26,12 @@ export interface AnalysisReport {
 }
 
 export function analyze(options: AnalyzeOptions): Promise<AnalysisReport>
-export function renderHtml(report: AnalysisReport): Promise<string>
+
+/**
+ * Render a report to one self-contained HTML page.
+ *
+ * `maxNodes` (default 150) is the point past which the graph collapses directories
+ * into single nodes, matching the CLI's `--max-nodes`. Raising it past a few hundred
+ * makes the layout slow to settle on large workspaces.
+ */
+export function renderHtml(report: AnalysisReport, maxNodes?: number): Promise<string>

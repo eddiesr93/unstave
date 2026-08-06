@@ -104,6 +104,14 @@ impl Reachability {
             .unwrap_or(0)
     }
 
+    /// Whether `target` is reachable from `node` under this instance's edge filter.
+    pub fn reaches(&self, node: NodeIndex, target: NodeIndex) -> bool {
+        let (Some(&from), Some(&to)) = (self.slot.get(&node), self.slot.get(&target)) else {
+            return false;
+        };
+        self.sets[from].contains(to)
+    }
+
     /// The reachable set from `node`, as node indices.
     pub fn set(&self, node: NodeIndex) -> Vec<NodeIndex> {
         let Some(&pos) = self.slot.get(&node) else {

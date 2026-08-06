@@ -111,9 +111,9 @@ fn graph_renderers_cluster_and_collapse_deterministically() {
 }
 
 #[test]
-fn html_is_self_contained_and_embeds_the_complete_report() {
+fn html_is_self_contained_and_embeds_the_projected_graph() {
     let report = report("pure-barrel");
-    let rendered = html::render(&report).expect("HTML should serialize");
+    let rendered = html::render(&report, html::DEFAULT_MAX_NODES).expect("HTML should serialize");
     assert!(rendered.starts_with("<!doctype html>"));
     assert!(rendered.contains("Cytoscape Consortium"));
     assert!(rendered.contains("id=\"unstave-data\""));
@@ -122,4 +122,71 @@ fn html_is_self_contained_and_embeds_the_complete_report() {
     assert!(rendered.contains("src/clients/index.ts"));
     assert!(!rendered.contains("<script src="));
     assert!(!rendered.contains("<link href="));
+}
+
+/// The page draws the projected graph, the summary and the barrel table. Embedding the
+/// rest of the report is what made a 5,000-module workspace produce a 4 MB page that
+/// pinned the layout engine, so the payload is asserted to stay narrow.
+#[test]
+fn html_embeds_only_what_the_page_draws() {
+    let report = report("cycles");
+    let rendered = html::render(&report, html::DEFAULT_MAX_NODES).expect("HTML should serialize");
+    let payload = embedded_payload(&rendered);
+
+    assert!(payload.get("graph").is_some());
+    assert!(payload.get("summary").is_some());
+    assert!(payload.pointer("/amplification/barrels").is_some());
+    for absent in [
+        "modules",
+        "edges",
+        "deadExports",
+        "cycles",
+        "fan",
+        "timings",
+    ] {
+        assert!(
+            payload.get(absent).is_none(),
+            "{absent} is not drawn and should not be embedded"
+        );
+    }
+}
+
+#[test]
+fn html_collapses_directories_past_the_node_budget() {
+    let report = report("nested-barrels");
+    let full = embedded_payload(&html::render(&report, 100).expect("HTML should serialize"));
+    let collapsed = embedded_payload(&html::render(&report, 2).expect("HTML should serialize"));
+
+    assert_eq!(full["graph"]["collapsed"], serde_json::Value::Bool(false));
+    assert_eq!(
+        collapsed["graph"]["collapsed"],
+        serde_json::Value::Bool(true)
+    );
+
+    let nodes = collapsed["graph"]["nodes"].as_array().expect("nodes");
+    assert!(
+        nodes.len() <= 2,
+        "collapsed graph kept {} nodes",
+        nodes.len()
+    );
+    let counted: u64 = nodes
+        .iter()
+        .map(|node| node["moduleCount"].as_u64().unwrap_or(0))
+        .sum();
+    assert_eq!(
+        counted, report.summary.modules as u64,
+        "every module belongs to exactly one collapsed node"
+    );
+}
+
+fn embedded_payload(rendered: &str) -> serde_json::Value {
+    let start = rendered
+        .find("id=\"unstave-data\" type=\"application/json\">")
+        .map(|index| index + "id=\"unstave-data\" type=\"application/json\">".len())
+        .expect("payload script element");
+    let end = start
+        + rendered[start..]
+            .find("</script>")
+            .expect("payload script close");
+    serde_json::from_str(&rendered[start..end]).expect("payload should be valid JSON")
 }

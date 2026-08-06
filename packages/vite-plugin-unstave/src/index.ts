@@ -14,6 +14,8 @@ export interface UnstaveOptions {
   serveReport?: boolean
   /** JSON and HTML output directory, relative to the Vite root. */
   outDir?: string
+  /** Graph nodes in the HTML report before directories collapse into one node. */
+  maxNodes?: number
 }
 
 const COMPUTING_HTML = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="1"><title>unstave</title></head><body style="font:16px system-ui;background:#121510;color:#edfbd6;padding:2rem">unstave is computing the module graph…</body></html>`
@@ -23,6 +25,7 @@ export default function unstave(options: UnstaveOptions = {}): Plugin {
   const warnAmplification = options.warnAmplification ?? 5
   const serveReport = options.serveReport ?? true
   const outDir = options.outDir ?? '.unstave'
+  const maxNodes = options.maxNodes
   let config: ResolvedConfig | undefined
   let report: AnalysisReport | undefined
   let html: string | undefined
@@ -39,7 +42,7 @@ export default function unstave(options: UnstaveOptions = {}): Plugin {
     running = (async () => {
       try {
         const nextReport = await analyze({ root: config.root })
-        const nextHtml = await renderHtml(nextReport)
+        const nextHtml = await renderHtml(nextReport, maxNodes)
         report = nextReport
         html = nextHtml
         warn(config, nextReport, warnAmplification)

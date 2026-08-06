@@ -5,12 +5,12 @@ use std::fmt::Write as _;
 
 use unstave_core::graph::EdgeKind;
 
-use crate::visualization::{project, VisualNode};
+use crate::visualization::{project, GraphInput, VisualNode};
 use crate::AnalysisReport;
 
 /// Render a directory-clustered graph, aggregating directories when needed.
 pub fn render(report: &AnalysisReport, max_nodes: usize) -> String {
-    let projected = project(report, max_nodes);
+    let projected = project(&GraphInput::from(report), max_nodes);
     let mut out = String::from(
         "digraph unstave {\n  graph [rankdir=LR, bgcolor=\"#111827\", fontcolor=\"#e5e7eb\", compound=true];\n  node [shape=ellipse, style=filled, fillcolor=\"#1f2937\", color=\"#64748b\", fontcolor=\"#e5e7eb\", fontname=\"Helvetica\"];\n  edge [color=\"#64748b\", fontcolor=\"#94a3b8\", fontname=\"Helvetica\", fontsize=9];\n",
     );

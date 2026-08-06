@@ -5,12 +5,12 @@ use std::fmt::Write as _;
 
 use unstave_core::graph::EdgeKind;
 
-use crate::visualization::{project, VisualNode};
+use crate::visualization::{project, GraphInput, VisualNode};
 use crate::AnalysisReport;
 
 /// Render a directory-clustered Mermaid flowchart.
 pub fn render(report: &AnalysisReport, max_nodes: usize) -> String {
-    let projected = project(report, max_nodes);
+    let projected = project(&GraphInput::from(report), max_nodes);
     let mut out = String::from("flowchart LR\n");
     if projected.collapsed {
         out.push_str("  %% Module count exceeded --max-nodes; nodes are directory aggregates.\n");

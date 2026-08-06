@@ -1,7 +1,7 @@
 class Unstave < Formula
   desc "Module graph analyzer and barrel codemod for TypeScript monorepos"
   homepage "https://github.com/eddiesr93/unstave"
-  url "https://github.com/eddiesr93/unstave.git", tag: "v0.1.1"
+  url "https://github.com/eddiesr93/unstave.git", tag: "v0.1.2"
   license "MIT"
 
   depends_on "rust" => :build

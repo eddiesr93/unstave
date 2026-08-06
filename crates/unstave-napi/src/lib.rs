@@ -41,6 +41,7 @@ impl Task for AnalyzeTask {
 #[doc(hidden)]
 pub struct RenderHtmlTask {
     report: Value,
+    max_nodes: usize,
 }
 
 impl Task for RenderHtmlTask {
@@ -48,7 +49,7 @@ impl Task for RenderHtmlTask {
     type JsValue = String;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        unstave_report::html::render_value(&self.report)
+        unstave_report::html::render_value(&self.report, self.max_nodes)
             .map_err(|error| napi::Error::from_reason(error.to_string()))
     }
 
@@ -64,9 +65,15 @@ pub fn analyze(options: AnalyzeOptions) -> AsyncTask<AnalyzeTask> {
 }
 
 /// Render a report object to one self-contained HTML string off the main thread.
+///
+/// `maxNodes` is the point past which the graph collapses directories into single
+/// nodes, matching the CLI's `--max-nodes`.
 #[napi(ts_return_type = "Promise<string>")]
-pub fn render_html(report: Value) -> AsyncTask<RenderHtmlTask> {
-    AsyncTask::new(RenderHtmlTask { report })
+pub fn render_html(report: Value, max_nodes: Option<u32>) -> AsyncTask<RenderHtmlTask> {
+    let max_nodes = max_nodes
+        .map(|value| value as usize)
+        .unwrap_or(unstave_report::html::DEFAULT_MAX_NODES);
+    AsyncTask::new(RenderHtmlTask { report, max_nodes })
 }
 
 fn analyze_sync(options: &AnalyzeOptions) -> Result<Value, String> {
@@ -130,7 +137,9 @@ mod tests {
         })
         .expect("fixture should analyze");
 
-        let html = unstave_report::html::render_value(&report).expect("report should render");
+        let html =
+            unstave_report::html::render_value(&report, unstave_report::html::DEFAULT_MAX_NODES)
+                .expect("report should render");
         assert!(html.starts_with("<!doctype html>"));
         assert!(html.contains("\"schemaVersion\":1"));
     }

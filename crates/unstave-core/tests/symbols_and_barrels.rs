@@ -303,6 +303,52 @@ fn projects_the_entrypoint_saving() {
     assert_eq!(projection.removed(), 5);
 }
 
+/// A barrel that re-exports types must not smuggle its definition modules into the
+/// projected closure. The projection used to walk the graph with type edges hardcoded
+/// off while the "before" count honoured the caller's setting, so a module behind
+/// `export type { X } from './x'` was counted only on the "after" side and the
+/// projected saving silently vanished.
+///
+/// Fixture graph: main -> clients/index -> {load -> fetcher} at runtime, with
+/// ThingDto and OtherDto hanging off the barrel through type-only re-exports.
+#[test]
+fn type_reexports_do_not_inflate_the_projection() {
+    // Runtime edges only: ThingDto is unreachable, so rewriting drops the barrel and
+    // keeps main + load + fetcher.
+    let projection = project_type_reexport(false);
+    assert_eq!(projection.before, 4);
+    assert_eq!(projection.after, 3);
+    assert_eq!(projection.removed(), 1);
+
+    // With type edges counted, ThingDto is genuinely reachable both before and after,
+    // and the two type-only modules the importer never asked for still leave.
+    let projection = project_type_reexport(true);
+    assert_eq!(projection.before, 6);
+    assert_eq!(projection.after, 4);
+    assert_eq!(projection.removed(), 2);
+}
+
+fn project_type_reexport(include_type_edges: bool) -> amplification::EntrypointProjection {
+    let ctx = ctx("type-reexport");
+    let r = ctx.resolver();
+    let barrels = barrel::classify(&ctx.graph, &BarrelConfig::default());
+    let entry = ctx.root.join("src/main.ts");
+
+    let report = amplification::compute(
+        &ctx.graph,
+        &ctx.analysis.modules,
+        &barrels,
+        &r,
+        &[entry],
+        include_type_edges,
+    );
+    report
+        .entrypoints
+        .into_iter()
+        .next()
+        .expect("entrypoint should project")
+}
+
 #[test]
 fn nested_barrels_amplify_through_every_layer() {
     let ctx = ctx("nested-barrels");

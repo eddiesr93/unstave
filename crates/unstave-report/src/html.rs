@@ -1,18 +1,24 @@
 //! Self-contained interactive HTML renderer.
 
+use serde_json::{json, Value};
+
+use crate::visualization::{project, GraphInput};
 use crate::AnalysisReport;
 
 const CYTOSCAPE: &str = include_str!("../assets/vendor/cytoscape-3.31.2/cytoscape.min.js");
 
+/// Node budget matching the other graph renderers.
+pub const DEFAULT_MAX_NODES: usize = 150;
+
 /// Render one portable HTML file with the report and graph library embedded.
-pub fn render(report: &AnalysisReport) -> serde_json::Result<String> {
+pub fn render(report: &AnalysisReport, max_nodes: usize) -> serde_json::Result<String> {
     let value = serde_json::to_value(report)?;
-    render_value(&value)
+    render_value(&value, max_nodes)
 }
 
 /// Render a report that already crossed a JSON-compatible API boundary.
-pub fn render_value(report: &serde_json::Value) -> serde_json::Result<String> {
-    let json = serde_json::to_string(report)?;
+pub fn render_value(report: &Value, max_nodes: usize) -> serde_json::Result<String> {
+    let json = serde_json::to_string(&view_model(report, max_nodes)?)?;
     // JSON inside a script element must not be able to spell a closing script tag.
     let safe_json = json
         .replace('<', "\\u003c")
@@ -33,6 +39,54 @@ pub fn render_value(report: &serde_json::Value) -> serde_json::Result<String> {
     out.push_str(APP_SCRIPT);
     out.push_str("</script></body></html>\n");
     Ok(out)
+}
+
+/// Everything the page draws, and nothing else.
+///
+/// The full report carries every module, edge, dead export and cycle path. Embedding
+/// that made a 4 MB page for a 5,000-module workspace and handed the layout engine
+/// ~20,000 elements, which pins the main thread. The page only draws the projected
+/// graph, the summary counters and the barrel table, so only those are serialized.
+fn view_model(report: &Value, max_nodes: usize) -> serde_json::Result<Value> {
+    let projected = project(&GraphInput::from_value(report)?, max_nodes);
+
+    let nodes: Vec<Value> = projected
+        .nodes
+        .iter()
+        .map(|node| {
+            json!({
+                "id": node.id,
+                "label": node.label,
+                "directory": node.directory,
+                "moduleCount": node.module_count,
+                "isBarrel": node.is_barrel,
+                "inCycle": node.in_cycle,
+                "members": node.members,
+            })
+        })
+        .collect();
+    let edges: Vec<Value> = projected
+        .edges
+        .iter()
+        .map(|edge| json!({ "source": edge.source, "target": edge.target, "kind": edge.kind }))
+        .collect();
+
+    Ok(json!({
+        "schemaVersion": report.get("schemaVersion").cloned().unwrap_or(Value::Null),
+        "summary": report.get("summary").cloned().unwrap_or(Value::Null),
+        "amplification": {
+            "barrels": report
+                .pointer("/amplification/barrels")
+                .cloned()
+                .unwrap_or_else(|| Value::Array(Vec::new())),
+        },
+        "graph": {
+            "nodes": nodes,
+            "edges": edges,
+            "collapsed": projected.collapsed,
+            "maxNodes": max_nodes,
+        },
+    }))
 }
 
 const HTML_HEAD: &str = r##"<!doctype html>
@@ -69,7 +123,7 @@ const HTML_BODY: &str = r##"<body>
     <section class="section"><h2>Selection</h2><div class="details" id="details"><p>Click a node to inspect its importers and importees.</p></div></section>
   </aside>
   <main class="main">
-    <section class="graph-wrap" aria-label="Dependency graph"><div class="graph-title"><b>Topology // live</b><span id="visible-count"></span></div><div id="cy"></div></section>
+    <section class="graph-wrap" aria-label="Dependency graph"><div class="graph-title"><b>Topology // live</b><span id="visible-count"></span><span id="graph-status"></span></div><div id="cy"></div></section>
     <section class="table-wrap"><div class="table-head"><h2>Barrel amplification</h2><span>Click a heading to sort</span></div><div id="barrels"></div></section>
   </main>
 </div>
@@ -79,8 +133,9 @@ const APP_SCRIPT: &str = r##"
 (() => {
   'use strict';
   const report = JSON.parse(document.getElementById('unstave-data').textContent);
-  const modules = new Map(report.modules.map(m => [m.id, m]));
-  const kinds = [...new Set(report.edges.map(e => e.kind))].sort();
+  const graph = report.graph;
+  const modules = new Map(graph.nodes.map(n => [n.id, n]));
+  const kinds = [...new Set(graph.edges.map(e => e.kind))].sort();
   const labels = {static:'Static',dynamic:'Dynamic',typeOnly:'Type only',reExport:'Re-export',sideEffectOnly:'Side effect'};
 
   const stats = [
@@ -91,13 +146,13 @@ const APP_SCRIPT: &str = r##"
   stats.forEach(([value,label]) => { const el=document.createElement('div'); el.className='stat'; const b=document.createElement('b'); b.textContent=value; const s=document.createElement('span'); s.textContent=label; el.append(b,s); statsEl.append(el); });
 
   const directory = document.getElementById('directory');
-  [...new Set(report.modules.map(m => m.directory))].sort().forEach(dir => { const option=document.createElement('option'); option.value=dir; option.textContent=dir; directory.append(option); });
+  [...new Set(graph.nodes.map(n => n.directory))].sort().forEach(dir => { const option=document.createElement('option'); option.value=dir; option.textContent=dir; directory.append(option); });
   const edgeKinds = document.getElementById('edge-kinds');
   kinds.forEach(kind => { const label=document.createElement('label'); label.className='check'; const input=document.createElement('input'); input.type='checkbox'; input.value=kind; input.checked=true; label.append(input, document.createTextNode(labels[kind] || kind)); edgeKinds.append(label); });
 
   const elements = [
-    ...report.modules.map(m => ({data:{id:m.id,label:m.path,path:m.path,directory:m.directory,inCycle:m.inCycle},classes:[m.barrel?'barrel':'',m.inCycle?'cycle':''].filter(Boolean).join(' ')})),
-    ...report.edges.map((e,i) => ({data:{id:`e${i}`,source:e.source,target:e.target,kind:e.kind,label:labels[e.kind] || e.kind},classes:e.kind}))
+    ...graph.nodes.map(n => ({data:{id:n.id,label:n.label,directory:n.directory,moduleCount:n.moduleCount,inCycle:n.inCycle},classes:[n.isBarrel?'barrel':'',n.inCycle?'cycle':'',n.moduleCount>1?'group':''].filter(Boolean).join(' ')})),
+    ...graph.edges.map((e,i) => ({data:{id:`e${i}`,source:e.source,target:e.target,kind:e.kind,label:labels[e.kind] || e.kind},classes:e.kind}))
   ];
   const cy = cytoscape({
     container: document.getElementById('cy'), elements,
@@ -111,36 +166,60 @@ const APP_SCRIPT: &str = r##"
       {selector:'edge.typeOnly',style:{'line-style':'dotted','line-color':'#687762','target-arrow-color':'#687762'}},
       {selector:'edge.reExport',style:{'width':2,'line-color':'#ffb000','target-arrow-color':'#ffb000'}},
       {selector:'edge.sideEffectOnly',style:{'width':2,'line-color':'#ff5c67','target-arrow-color':'#ff5c67'}},
+      {selector:'node.group',style:{'shape':'round-rectangle','width':46,'height':26,'font-size':8}},
       {selector:'.hidden',style:{'display':'none'}}
     ],
-    layout:{name:'cose',animate:false,nodeRepulsion:7000,idealEdgeLength:65,edgeElasticity:80,gravity:.4,numIter:900,randomize:true}
+    // A layout run in the constructor blocks first paint. Start from a cheap preset so
+    // the sidebar and table are usable immediately, then lay out on the next frame.
+    layout:{name:'grid',fit:true}
   });
 
   const visibleCount = document.getElementById('visible-count');
+  const status = document.getElementById('graph-status');
+  function runLayout(){
+    const count = cy.nodes().length;
+    // cose is force-directed and superlinear; past a few hundred nodes it stops being
+    // worth the wait, and a deterministic layered layout reads better anyway.
+    const layout = count <= 260
+      ? {name:'cose',animate:false,nodeRepulsion:7000,idealEdgeLength:65,edgeElasticity:80,gravity:.4,numIter:400,randomize:true}
+      : {name:'breadthfirst',animate:false,directed:true,spacingFactor:1.1};
+    status.textContent='laying out…';
+    requestAnimationFrame(() => {
+      cy.layout(layout).run();
+      cy.fit(cy.elements(':visible'),38);
+      status.textContent = graph.collapsed
+        ? `directories collapsed at --max-nodes ${graph.maxNodes}`
+        : '';
+    });
+  }
+  runLayout();
   function applyFilters(){
     const dir=directory.value;
     const enabled=new Set([...edgeKinds.querySelectorAll('input:checked')].map(i=>i.value));
     cy.batch(() => {
-      cy.nodes().forEach(node => { const module=modules.get(node.id()); node.toggleClass('hidden', !!dir && module.directory!==dir && !module.path.startsWith(`${dir}/`)); });
+      cy.nodes().forEach(node => { const item=modules.get(node.id()); node.toggleClass('hidden', !!dir && item.directory!==dir && !item.members.some(path => path.startsWith(`${dir}/`))); });
       cy.edges().forEach(edge => edge.toggleClass('hidden', !enabled.has(edge.data('kind'))));
     });
-    visibleCount.textContent=`${cy.nodes(':visible').length} modules · ${cy.edges(':visible').length} edges`;
+    const shown=cy.nodes(':visible');
+    const moduleCount=shown.reduce((sum,node)=>sum+(node.data('moduleCount')||1),0);
+    visibleCount.textContent=`${moduleCount} modules in ${shown.length} nodes · ${cy.edges(':visible').length} edges`;
   }
   directory.addEventListener('change',applyFilters);
   edgeKinds.addEventListener('change',applyFilters);
-  document.getElementById('cycles').addEventListener('change',event => { report.modules.filter(m=>m.inCycle).forEach(m=>cy.getElementById(m.id).toggleClass('cycle',event.target.checked)); });
+  document.getElementById('cycles').addEventListener('change',event => { graph.nodes.filter(n=>n.inCycle).forEach(n=>cy.getElementById(n.id).toggleClass('cycle',event.target.checked)); });
   document.getElementById('fit').addEventListener('click',()=>cy.fit(cy.elements(':visible'),38));
   applyFilters();
 
   const details=document.getElementById('details');
+  const addList=(title,items) => { const p=document.createElement('p'); p.textContent=`${title} (${items.length})`; details.append(p); const ul=document.createElement('ul'); [...items].sort((a,b)=>a.localeCompare(b)).forEach(text=>{const li=document.createElement('li');li.textContent=text;ul.append(li)}); details.append(ul); };
   cy.on('tap','node',event => {
-    const node=event.target, module=modules.get(node.id());
+    const node=event.target, item=modules.get(node.id());
     details.replaceChildren();
-    const h=document.createElement('h3'); h.textContent=module.path; details.append(h);
-    const meta=document.createElement('p'); meta.textContent=[module.barrel?`${module.barrel.kind} barrel`:null,module.hasSideEffects?'has side effects':null,module.inCycle?'cycle member':null].filter(Boolean).join(' · ') || 'module'; details.append(meta);
-    const addList=(title,nodes) => { const p=document.createElement('p'); p.textContent=`${title} (${nodes.length})`; details.append(p); const ul=document.createElement('ul'); nodes.sort((a,b)=>a.localeCompare(b)).forEach(path=>{const li=document.createElement('li');li.textContent=path;ul.append(li)}); details.append(ul); };
-    addList('Imported by',node.incomers('node').map(n=>n.data('path')));
-    addList('Imports',node.outgoers('node').map(n=>n.data('path')));
+    const h=document.createElement('h3'); h.textContent=item.moduleCount>1?item.label:item.members[0]; details.append(h);
+    const meta=document.createElement('p'); meta.textContent=[item.moduleCount>1?`${item.moduleCount} modules`:null,item.isBarrel?(item.moduleCount>1?'contains barrels':'barrel'):null,item.inCycle?'cycle member':null].filter(Boolean).join(' · ') || 'module'; details.append(meta);
+    addList('Imported by',node.incomers('node').map(n=>modules.get(n.id()).label));
+    addList('Imports',node.outgoers('node').map(n=>modules.get(n.id()).label));
+    if(item.moduleCount>1) addList('Modules',item.members);
   });
 
   let sortKey='totalExcess', sortDirection=-1;

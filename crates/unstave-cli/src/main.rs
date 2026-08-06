@@ -77,7 +77,7 @@ struct AnalyzeArgs {
     #[arg(long)]
     include_type_edges: bool,
 
-    /// Maximum graph nodes before DOT/Mermaid collapse directories.
+    /// Maximum graph nodes before DOT, Mermaid, and HTML collapse directories.
     #[arg(long, value_name = "N", default_value_t = 150, value_parser = parse_positive_usize)]
     max_nodes: usize,
 }
@@ -194,7 +194,9 @@ fn run_analyze(global: &GlobalArgs, args: &AnalyzeArgs) -> Result<()> {
                     Format::Json => json::render(&report).context("serializing JSON report")?,
                     Format::Dot => dot::render(&report, args.max_nodes),
                     Format::Mermaid => mermaid::render(&report, args.max_nodes),
-                    Format::Html => html::render(&report).context("serializing HTML report")?,
+                    Format::Html => {
+                        html::render(&report, args.max_nodes).context("serializing HTML report")?
+                    }
                     Format::Terminal => unreachable!("terminal handled above"),
                 };
                 let directory = output_directory
