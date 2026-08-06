@@ -3,6 +3,7 @@
 use std::path::PathBuf;
 
 use napi::bindgen_prelude::{AsyncTask, Env, Task, Unknown};
+use napi::{Error as NapiError, Status};
 use napi_derive::napi;
 use serde_json::Value;
 use unstave_core::graph::ModuleGraph;
@@ -30,7 +31,7 @@ impl Task for AnalyzeTask {
     type JsValue = Unknown<'static>;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        analyze_sync(&self.options).map_err(napi::Error::from_reason)
+        analyze_sync(&self.options)
     }
 
     fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
@@ -76,7 +77,7 @@ pub fn render_html(report: Value, max_nodes: Option<u32>) -> AsyncTask<RenderHtm
     AsyncTask::new(RenderHtmlTask { report, max_nodes })
 }
 
-fn analyze_sync(options: &AnalyzeOptions) -> Result<Value, String> {
+fn analyze_sync(options: &AnalyzeOptions) -> napi::Result<Value> {
     let root = options
         .root
         .as_deref()
@@ -84,13 +85,13 @@ fn analyze_sync(options: &AnalyzeOptions) -> Result<Value, String> {
         .unwrap_or_else(|| PathBuf::from("."));
     let config_path = options.config.as_deref().map(PathBuf::from);
     let config = unstave_core::Config::load(&root, config_path.as_deref())
-        .map_err(|error| format!("loading config for {}: {error}", root.display()))?;
+        .map_err(|error| core_error(error, &format!("loading config for {}", root.display())))?;
     let analysis = if options.no_cache.unwrap_or(false) {
         unstave_core::analyze(&root, &config)
     } else {
         unstave_core::analyze_cached(&root, &config)
     }
-    .map_err(|error| format!("analyzing {}: {error}", root.display()))?;
+    .map_err(|error| core_error(error, &format!("analyzing {}", root.display())))?;
     let graph = ModuleGraph::build(&analysis.modules);
     let report = unstave_report::build_report(
         &analysis,
@@ -98,7 +99,25 @@ fn analyze_sync(options: &AnalyzeOptions) -> Result<Value, String> {
         &config,
         options.include_type_edges.unwrap_or(false),
     );
-    serde_json::to_value(report).map_err(|error| format!("serializing report: {error}"))
+    serde_json::to_value(report)
+        .map_err(|error| napi::Error::from_reason(format!("serializing report: {error}")))
+}
+
+/// Convert an `unstave_core::Error` into a `napi::Error`, preserving the structured
+/// variant instead of collapsing it to a bare string.
+///
+/// The full `Display` message (which already carries the variant context and the
+/// underlying source chain) becomes the JS `message`. The stable variant name is
+/// carried in `cause`, which napi-rs propagates to JS as `err.cause`, so consumers
+/// can distinguish error kinds programmatically via `err.cause?.message` (e.g.
+/// `'Config'`) rather than parsing the human-readable message.
+fn core_error(error: unstave_core::Error, context: &str) -> NapiError {
+    let mut err = NapiError::new(Status::GenericFailure, format!("{context}: {error}"));
+    err.cause = Some(Box::new(NapiError::new(
+        Status::GenericFailure,
+        error.variant_name(),
+    )));
+    err
 }
 
 #[cfg(test)]

@@ -31,7 +31,12 @@ pub enum Error {
     },
 
     #[error("failed to build resolver for package {package}: {message}")]
-    Resolver { package: PathBuf, message: String },
+    Resolver {
+        package: PathBuf,
+        message: String,
+        #[source]
+        source: Box<dyn std::error::Error + Send + Sync>,
+    },
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -42,5 +47,45 @@ impl Error {
             path: path.into(),
             source,
         }
+    }
+
+    /// Stable, machine-readable name for this error variant.
+    ///
+    /// Kept deliberately stable so callers (e.g. the NAPI boundary) can surface a
+    /// programmatic `code` to consumers without parsing the human-readable message.
+    pub fn variant_name(&self) -> &'static str {
+        match self {
+            Error::Io { .. } => "Io",
+            Error::Walk { .. } => "Walk",
+            Error::Config { .. } => "Config",
+            Error::Glob { .. } => "Glob",
+            Error::Resolver { .. } => "Resolver",
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn variant_name_is_stable_per_variant() {
+        assert_eq!(
+            Error::io(
+                "a.ts",
+                std::io::Error::new(std::io::ErrorKind::NotFound, "nope")
+            )
+            .variant_name(),
+            "Io"
+        );
+        assert_eq!(
+            Error::Resolver {
+                package: PathBuf::from("."),
+                message: "boom".to_string(),
+                source: Box::new(std::io::Error::new(std::io::ErrorKind::Other, "source")),
+            }
+            .variant_name(),
+            "Resolver"
+        );
     }
 }
