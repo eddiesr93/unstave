@@ -94,11 +94,12 @@ pub fn analyze(root: &Path, config: &Config) -> Result<Analysis> {
     let workspace = discover(root, config)?;
     let discovery_ms = t.elapsed().as_millis();
 
-    analyze_discovered(workspace, started, discovery_ms)
+    analyze_discovered(workspace, config, started, discovery_ms)
 }
 
 pub(crate) fn analyze_discovered(
     workspace: Workspace,
+    config: &Config,
     started: Instant,
     discovery_ms: u128,
 ) -> Result<Analysis> {
@@ -125,7 +126,7 @@ pub(crate) fn analyze_discovered(
     let parse_ms = t.elapsed().as_millis();
 
     let t = Instant::now();
-    let resolvers = ResolverSet::new(&workspace);
+    let resolvers = ResolverSet::with_conditions(&workspace, &config.resolve.conditions);
     let resolved: Vec<(Module, Vec<UnresolvedSpecifier>)> = facts
         .into_par_iter()
         .map(|facts| resolve_module(&workspace, &resolvers, facts))

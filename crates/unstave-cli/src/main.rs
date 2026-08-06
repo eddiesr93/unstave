@@ -38,6 +38,16 @@ struct GlobalArgs {
     #[arg(long, global = true)]
     no_cache: bool,
 
+    /// Extra export condition to honour when resolving `exports` maps. Repeatable.
+    ///
+    /// Monorepos often point a custom condition at TypeScript source, so that dev
+    /// resolves to `src/` while published builds resolve to `dist/`. Without it,
+    /// resolution lands on build output that may not exist yet and cross-package
+    /// imports silently fail. Examples: `development`, `source`,
+    /// `@tanstack/custom-condition`.
+    #[arg(long = "condition", global = true, value_name = "NAME")]
+    conditions: Vec<String>,
+
     /// Increase verbosity (-v, -vv).
     #[arg(short, long, global = true, action = clap::ArgAction::Count)]
     verbose: u8,
@@ -235,8 +245,16 @@ struct Loaded {
 }
 
 fn load(global: &GlobalArgs) -> Result<Loaded> {
-    let config = Config::load(&global.root, global.config.as_deref())
+    let mut config = Config::load(&global.root, global.config.as_deref())
         .with_context(|| format!("loading config for {}", global.root.display()))?;
+    // CLI conditions layer on top of the file's, ahead of them: a condition passed
+    // explicitly for this run should win over one configured for the workspace.
+    if !global.conditions.is_empty() {
+        let mut conditions = global.conditions.clone();
+        conditions.extend(config.resolve.conditions.iter().cloned());
+        conditions.dedup();
+        config.resolve.conditions = conditions;
+    }
     let analysis = if global.no_cache {
         analyze(&global.root, &config)
     } else {

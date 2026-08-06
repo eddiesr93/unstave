@@ -162,7 +162,37 @@ max_own_decls = 2      # ...and the module may declare at most this many things
 
 [codemod]
 import_style = "preserve"
+
+[resolve]
+# Extra export conditions, tried before the defaults.
+conditions = ["@tanstack/custom-condition"]
 ```
+
+### Monorepos: export conditions
+
+If `unstave analyze` reports a large number of unresolved specifiers in a
+workspace, the usual cause is that your packages' `exports` maps point at build
+output that has not been built yet:
+
+```json
+"exports": { ".": { "import": "./dist/index.js" } }
+```
+
+Many monorepos add a custom condition pointing at TypeScript source, so that
+development resolves to `src/` while consumers get `dist/`. Pass it with
+`--condition` (repeatable) or set `[resolve] conditions` in `unstave.toml`:
+
+```bash
+unstave barrels --condition @tanstack/custom-condition
+```
+
+Common values are `development`, `source`, and project-specific names. Conditions
+are tried **before** the defaults, so a source-pointing condition wins over the
+`import`/`default` entry.
+
+If your packages expose no source condition at all, build the workspace first —
+otherwise cross-package imports cannot resolve and every count behind them will be
+understated.
 
 ## Vite plugin
 

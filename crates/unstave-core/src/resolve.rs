@@ -125,16 +125,21 @@ pub struct ResolverSet {
 
 impl ResolverSet {
     pub fn new(workspace: &Workspace) -> Self {
+        Self::with_conditions(workspace, &[])
+    }
+
+    /// Build the resolver set, honouring extra export conditions from config.
+    pub fn with_conditions(workspace: &Workspace, conditions: &[String]) -> Self {
         let by_package = workspace
             .packages
             .iter()
-            .map(|pkg| (pkg.root.clone(), build_resolver(pkg)))
+            .map(|pkg| (pkg.root.clone(), build_resolver(pkg, conditions)))
             .collect();
 
         Self {
             root: workspace.root.clone(),
             by_package,
-            fallback: Resolver::new(base_options()),
+            fallback: Resolver::new(base_options_with(conditions)),
         }
     }
 
@@ -192,6 +197,22 @@ impl ResolverSet {
     }
 }
 
+/// Build resolver options, appending any user-supplied export conditions.
+///
+/// Extra conditions are placed *before* the defaults: oxc_resolver matches an
+/// `exports` map in condition order, so a custom condition pointing at source must
+/// win over the generic `import`/`default` entry pointing at build output.
+fn base_options_with(extra_conditions: &[String]) -> ResolveOptions {
+    let mut options = base_options();
+    if !extra_conditions.is_empty() {
+        let mut conditions = extra_conditions.to_vec();
+        conditions.extend(options.condition_names.iter().cloned());
+        conditions.dedup();
+        options.condition_names = conditions;
+    }
+    options
+}
+
 fn base_options() -> ResolveOptions {
     ResolveOptions {
         extensions: [
@@ -224,8 +245,8 @@ fn base_options() -> ResolveOptions {
     }
 }
 
-fn build_resolver(package: &Package) -> Resolver {
-    let mut options = base_options();
+fn build_resolver(package: &Package, conditions: &[String]) -> Resolver {
+    let mut options = base_options_with(conditions);
     if let Some(tsconfig) = &package.tsconfig {
         // `baseUrl` and `paths` come from here; `references: Auto` follows project
         // references so a composite monorepo resolves across projects.

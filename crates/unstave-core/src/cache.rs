@@ -50,7 +50,7 @@ pub fn analyze_cached(root: &Path, config: &Config) -> Result<Analysis> {
         });
     }
 
-    let analysis = analyze_discovered(workspace, started, discovery_ms)?;
+    let analysis = analyze_discovered(workspace, config, started, discovery_ms)?;
     store(&path, fingerprint, &analysis);
     Ok(analysis)
 }

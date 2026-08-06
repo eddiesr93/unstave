@@ -16,6 +16,21 @@ pub struct Config {
     pub barrel: BarrelConfig,
     pub thresholds: Thresholds,
     pub codemod: CodemodConfig,
+    pub resolve: ResolveConfig,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct ResolveConfig {
+    /// Extra export conditions to honour, on top of the defaults.
+    ///
+    /// Monorepos commonly point a custom condition at TypeScript source so that
+    /// development resolves to `src/` while published builds resolve to `dist/`.
+    /// TanStack Query uses `@tanstack/custom-condition`; `development` and `source`
+    /// are also widespread. Without the right condition the resolver lands on build
+    /// output that may not exist yet, and cross-package imports silently fail to
+    /// resolve — which makes every downstream count wrong rather than merely absent.
+    pub conditions: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
