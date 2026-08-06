@@ -11,23 +11,9 @@ use crate::facts::Span;
 use crate::graph::ModuleGraph;
 use crate::pipeline::Module;
 
-/// Why an imported symbol cannot be rewritten to its definition site.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum SkipReason {
-    /// Two `export *` sources provide the name.
-    Ambiguous,
-    /// The re-export chain loops.
-    Cyclic,
-    /// The chain ends outside the workspace.
-    External,
-    /// The name is not exported by the barrel.
-    NotFound,
-    /// `import * as ns from '...'` has no safe mechanical rewrite.
-    NamespaceImport,
-    /// The barrel itself has top-level side effects.
-    BarrelHasSideEffects,
-}
+/// Re-exported so `unstave_core::analysis::amplification::SkipReason` keeps
+/// resolving to the single shared [`SkipReason`].
+pub use crate::analysis::skip::SkipReason;
 
 /// One import statement that goes through a barrel.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

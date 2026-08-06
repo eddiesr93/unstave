@@ -4,13 +4,16 @@ use std::collections::{BTreeMap, HashMap};
 use std::path::{Component, Path, PathBuf};
 
 use globset::GlobMatcher;
-use serde::{Deserialize, Serialize};
 use unstave_core::analysis::barrel;
 use unstave_core::analysis::symbols::{Resolution, SymbolResolver};
 use unstave_core::config::ImportStyle;
 use unstave_core::facts::{Binding, Span};
 use unstave_core::graph::ModuleGraph;
 use unstave_core::{Analysis, Config};
+
+/// Re-exported so `unstave_codemod::SkipReason` keeps resolving to the single
+/// shared [`SkipReason`] defined in `unstave-core`.
+pub use unstave_core::analysis::skip::SkipReason;
 
 /// Scope and path-style policy for one codemod plan.
 #[derive(Debug, Clone)]
@@ -37,34 +40,6 @@ pub struct FileChange {
     pub original: String,
     pub rewritten: String,
     pub imports_rewritten: usize,
-}
-
-/// Why an import statement was left byte-identical.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub enum SkipReason {
-    Ambiguous,
-    Cyclic,
-    External,
-    NotFound,
-    NamespaceImport,
-    BarrelHasSideEffects,
-    MergeConflict,
-}
-
-impl SkipReason {
-    /// Stable, human-readable label used in CLI summaries.
-    pub const fn label(self) -> &'static str {
-        match self {
-            Self::Ambiguous => "ambiguous symbol",
-            Self::Cyclic => "cyclic re-export",
-            Self::External => "external re-export",
-            Self::NotFound => "symbol not found",
-            Self::NamespaceImport => "namespace import",
-            Self::BarrelHasSideEffects => "manual review — barrel has side effects",
-            Self::MergeConflict => "merge conflict",
-        }
-    }
 }
 
 /// Count of skipped import statements for one reason.

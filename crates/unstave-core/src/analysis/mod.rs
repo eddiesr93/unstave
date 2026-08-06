@@ -7,4 +7,5 @@ pub mod cycles;
 pub mod dead_exports;
 pub mod fan;
 pub mod reach;
+pub mod skip;
 pub mod symbols;
