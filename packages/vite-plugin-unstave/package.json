@@ -1,6 +1,6 @@
 {
   "name": "@unstave/vite-plugin",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Non-blocking unstave module-graph reports for Vite",
   "type": "module",
   "license": "MIT",

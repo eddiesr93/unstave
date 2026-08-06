@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-08-06
+
+### Fixed
+
+- Make module resolution path matching cross-platform (Windows). The resolver now
+  classifies a resolved path as internal vs. external by comparing it against the
+  workspace root in the same canonical key form the graph uses for its node index,
+  instead of a byte- and case-sensitive `Path::starts_with`. A path that discovery
+  would spell differently on Windows (back/forward slashes, the `\\?\` prefix, drive
+  or component case, or uncollapsed `..`) is no longer misclassified as external,
+  which previously could silently drop every edge into it.
+- Satisfy the clippy `io_other_error` lint in the core error test.
+
+### CI & tooling
+
+- Add Windows native test coverage to CI so the native bindings are exercised on
+  Windows, not just the platform where CI previously ran.
+
 ## [0.1.4] - 2026-08-06
 
 ### Fixed
@@ -55,7 +73,8 @@ Initial public release of the analyzers, CLI, NAPI bindings, and Vite plugin.
 - Fix the HTML report on large graphs, the entrypoint projection, and the
   warm-run cost.
 
-[Unreleased]: https://github.com/eddiesr93/unstave/compare/v0.1.4...HEAD
+[Unreleased]: https://github.com/eddiesr93/unstave/compare/v0.1.5...HEAD
+[0.1.5]: https://github.com/eddiesr93/unstave/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/eddiesr93/unstave/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/eddiesr93/unstave/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/eddiesr93/unstave/releases/tag/v0.1.2

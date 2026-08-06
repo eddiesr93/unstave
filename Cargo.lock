@@ -1728,7 +1728,7 @@ checksum = "b4ac048d71ede7ee76d585517add45da530660ef4390e49b098733c6e897f254"
 
 [[package]]
 name = "unstave-cli"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "clap",
@@ -1741,7 +1741,7 @@ dependencies = [
 
 [[package]]
 name = "unstave-codemod"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "globset",
  "insta",
@@ -1755,7 +1755,7 @@ dependencies = [
 
 [[package]]
 name = "unstave-core"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "fixedbitset",
  "globset",
@@ -1779,7 +1779,7 @@ dependencies = [
 
 [[package]]
 name = "unstave-napi"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "napi",
  "napi-build",
@@ -1791,7 +1791,7 @@ dependencies = [
 
 [[package]]
 name = "unstave-report"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "comfy-table",
  "insta",
