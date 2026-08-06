@@ -1,16 +1,58 @@
 # unstave
 
-Module graph analyzer and barrel codemod for TypeScript/React monorepos.
+**Your `index.ts` barrel files are why your dev server takes 20 seconds to start.
+`unstave` proves it, then fixes it.**
 
 [Product site](https://eddiesr93.github.io/unstave/) · [Documentation](https://eddiesr93.github.io/unstave/docs/) · [Installation](#install) · [Usage](#usage)
 
-`unstave` builds the full module graph of your workspace, finds where barrel files
-(`index.ts` re-export hubs) are amplifying import cost, and rewrites those imports
-to point at the modules that actually declare the symbols.
+One innocent-looking import:
 
-The problem it exists to solve: a single `import { Foo } from '@/clients'` can pull
-hundreds of modules into your dev server's graph, because the barrel re-exports all
-of them. `unstave` measures that amplification precisely, then fixes it.
+```ts
+import { Client0 } from '@/clients';
+```
+
+pulls **1047 modules** into your dev server's graph. It needs **3**.
+
+```console
+$ unstave barrels
+
+Barrel amplification
+┌──────────────────────┬───────┬──────┬─────────┬───────┬────────┬────────────┐
+│ barrel               ┆ sites ┆ cost ┆ excess  ┆ worst ┆ amp    ┆ rewritable │
+╞══════════════════════╪═══════╪══════╪═════════╪═══════╪════════╪════════════╡
+│ src/clients/index.ts ┆ 4920  ┆ 1047 ┆ 5136480 ┆ 1044  ┆ 349.0× ┆ 4920/4920  │
+└──────────────────────┴───────┴──────┴─────────┴───────┴────────┴────────────┘
+
+Projected per-entrypoint module count after a full codemod
+┌──────────────┬────────┬───────┬───────────┐
+│ entrypoint   ┆ before ┆ after ┆ removed   │
+╞══════════════╪════════╪═══════╪═══════════╡
+│ src/main.tsx ┆ 1128   ┆ 195   ┆ 933 (83%) │
+└──────────────┴────────┴───────┴───────────┘
+```
+
+Then `unstave fix --write` rewrites those imports to point at the modules that
+actually declare the symbols — **without reformatting a single byte** outside the
+import statements it touches.
+
+Analysing 6000 files takes **~150 ms** warm, **~250 ms** on a cold page cache
+(Apple M4 Pro, 14 cores, no persistent cache).
+
+<sub>Numbers above are from the reproducible benchmark workspace included in this
+repo, not from a customer codebase. Generate it yourself and check the arithmetic:
+`cargo run --release -p unstave-core --example gen_synthetic -- /tmp/demo 6000`.
+Your own numbers depend entirely on how your barrels are shaped — run
+`unstave barrels` and find out.</sub>
+
+## Why this happens
+
+A barrel (`index.ts` that re-exports a directory) is a single node that depends on
+everything behind it. Your bundler tree-shakes it for production, so the shipped
+output is fine — but your **dev server** resolves and transforms the whole graph
+eagerly, and your **type checker** walks all of it. That cost is invisible in
+production metrics, which is why it survives for years.
+
+`unstave` is the measuring instrument for that cost, and the codemod that removes it.
 
 > **Status: early.** The initial implementation is complete and release automation
 > is in place. Interfaces may still change before 1.0.
