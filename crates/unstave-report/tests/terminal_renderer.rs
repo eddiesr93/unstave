@@ -115,13 +115,7 @@ fn render_cycles_lists_every_cycle_member() {
     // Each of the cycle members appears in the closed-path tree. `y.ts` is a member
     // of the 4-module cycle but not on its `shortest_path`, so only the tree members
     // are asserted here.
-    for member in [
-        "src/a.ts",
-        "src/b.ts",
-        "src/w.ts",
-        "src/x.ts",
-        "src/z.ts",
-    ] {
+    for member in ["src/a.ts", "src/b.ts", "src/w.ts", "src/x.ts", "src/z.ts"] {
         assert!(
             rendered.contains(member),
             "cycle member `{member}` should be listed"
