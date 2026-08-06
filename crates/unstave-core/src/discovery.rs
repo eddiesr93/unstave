@@ -258,7 +258,7 @@ fn build_packages(root: &Path, package_jsons: &[PathBuf], files: &[PathBuf]) -> 
         .iter()
         .filter_map(|manifest| {
             let dir = manifest.parent()?;
-            Some(read_package(dir, manifest, files))
+            Some(read_package(dir, manifest, files, root))
         })
         .collect();
 
@@ -270,7 +270,7 @@ fn build_packages(root: &Path, package_jsons: &[PathBuf], files: &[PathBuf]) -> 
             Package {
                 root: root.to_path_buf(),
                 name: None,
-                tsconfig: find_tsconfig(root),
+                tsconfig: find_tsconfig(root, root),
                 side_effects_false: false,
                 public_entrypoints: Vec::new(),
             },
@@ -279,7 +279,7 @@ fn build_packages(root: &Path, package_jsons: &[PathBuf], files: &[PathBuf]) -> 
     packages
 }
 
-fn read_package(dir: &Path, manifest: &Path, files: &[PathBuf]) -> Package {
+fn read_package(dir: &Path, manifest: &Path, files: &[PathBuf], root: &Path) -> Package {
     let mut name = None;
     let mut side_effects_false = false;
     let mut public_entrypoints = Vec::new();
@@ -309,7 +309,7 @@ fn read_package(dir: &Path, manifest: &Path, files: &[PathBuf]) -> Package {
     Package {
         root: dir.to_path_buf(),
         name,
-        tsconfig: find_tsconfig(dir),
+        tsconfig: find_tsconfig(dir, root),
         side_effects_false,
         public_entrypoints,
     }
@@ -382,9 +382,28 @@ fn expand_export_target(
     }
 }
 
-fn find_tsconfig(dir: &Path) -> Option<PathBuf> {
-    ["tsconfig.json", "jsconfig.json"]
-        .iter()
-        .map(|f| dir.join(f))
-        .find(|p| p.is_file())
+/// The tsconfig governing `dir`, searching upwards to `root`.
+///
+/// A package without its own `tsconfig.json` inherits the nearest ancestor's, which
+/// is how `tsc` and every bundler behave. Stopping at the package directory instead
+/// is a silent trap: an app folder that has a `package.json` but shares the
+/// workspace's root tsconfig would get a resolver with no `paths` at all, so every
+/// aliased import fails to resolve and every count behind it is understated rather
+/// than reported missing.
+fn find_tsconfig(dir: &Path, root: &Path) -> Option<PathBuf> {
+    let mut current = Some(dir);
+    while let Some(here) = current {
+        if let Some(found) = ["tsconfig.json", "jsconfig.json"]
+            .iter()
+            .map(|f| here.join(f))
+            .find(|p| p.is_file())
+        {
+            return Some(found);
+        }
+        if here == root {
+            break;
+        }
+        current = here.parent();
+    }
+    None
 }

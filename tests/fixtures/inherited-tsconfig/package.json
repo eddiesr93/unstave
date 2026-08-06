@@ -1,0 +1,2 @@
+{ "name": "fixture-inherited-tsconfig", "private": true, "version": "0.0.0",
+  "workspaces": ["app", "packages/*"] }
