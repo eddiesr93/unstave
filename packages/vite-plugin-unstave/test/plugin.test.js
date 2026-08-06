@@ -69,7 +69,7 @@ test('enabled production build writes JSON and HTML reports', async () => {
 
   const json = JSON.parse(await readFile(join(root, '.analysis/unstave-report.json'), 'utf8'))
   const html = await readFile(join(root, '.analysis/unstave-report.html'), 'utf8')
-  assert.equal(json.schemaVersion, 1)
+  assert.equal(json.schemaVersion, 2)
   assert.match(html, /^<!doctype html>/)
   await rm(root, { recursive: true, force: true })
 })

@@ -20,12 +20,12 @@ test('analyze and renderHtml cross the async native boundary', async () => {
     root: SIMPLE,
     noCache: true,
   })
-  assert.equal(report.schemaVersion, 1)
+  assert.equal(report.schemaVersion, 2)
   assert.equal(report.summary.filesAnalyzed, 3)
 
   const html = await renderHtml(report)
   assert.match(html, /^<!doctype html>/)
-  assert.match(html, /"schemaVersion":1/)
+  assert.match(html, /"schemaVersion":2/)
 })
 
 test('includeTypeEdges changes which modules reachability analyses count', async () => {
@@ -77,8 +77,8 @@ test('cache and noCache both return a valid report and are consistent', async ()
   const cached = await analyze({ root: SIMPLE })
   const noCache = await analyze({ root: SIMPLE, noCache: true })
 
-  assert.equal(cached.schemaVersion, 1)
-  assert.equal(noCache.schemaVersion, 1)
+  assert.equal(cached.schemaVersion, 2)
+  assert.equal(noCache.schemaVersion, 2)
   assert.equal(cached.summary.filesAnalyzed, 3)
   assert.equal(noCache.summary.filesAnalyzed, 3)
   assert.equal(
@@ -94,7 +94,7 @@ test('renderHtml accepts maxNodes and still returns valid output', async () => {
   const report = await analyze({ root: SIMPLE, noCache: true })
   const html = await renderHtml(report, 1)
   assert.match(html, /^<!doctype html>/)
-  assert.match(html, /"schemaVersion":1/)
+  assert.match(html, /"schemaVersion":2/)
 })
 
 test('analyze rejects when the root does not exist', async () => {
