@@ -210,6 +210,43 @@ fn ranks_fan_in_and_fan_out() {
     assert_eq!(alpha.transitive, 2, "the barrel and main both reach it");
 }
 
+/// Regression: the native binding's `includeTypeEdges` test builds its assertion on
+/// fan-in membership for a type-only re-export chain. If the graph ever dropped the
+/// type-only edges into a type-only module (e.g. because a resolved path's separators
+/// stopped matching the canonicalised discovery path on Windows), the module would
+/// disappear from fan-in. Guard that the edges — and therefore the fan-in — behave the
+/// same here as they do on every platform.
+#[test]
+fn type_only_reexport_module_enters_fan_in_only_with_type_edges() {
+    let built = build("type-reexport");
+
+    let in_fan = |report: &fan::FanReport| {
+        report
+            .fan_in
+            .iter()
+            .any(|e| built.rel(&e.path) == "src/clients/models/ThingDto.ts")
+    };
+
+    let without_type = fan::compute(&built.graph, false, usize::MAX);
+    assert!(
+        !in_fan(&without_type),
+        "type-only module should be absent from fan-in when type edges are excluded"
+    );
+
+    let with_type = fan::compute(&built.graph, true, usize::MAX);
+    let entry = with_type
+        .fan_in
+        .iter()
+        .find(|e| built.rel(&e.path) == "src/clients/models/ThingDto.ts")
+        .expect("type-only module should appear in fan-in when type edges are included");
+    assert_eq!(
+        entry.direct, 2,
+        "both the barrel and load import ThingDto directly"
+    );
+    // main -> barrel -> ThingDto, plus load's direct import.
+    assert!(entry.transitive > 1, "main and the barrel both reach it");
+}
+
 /// The SCC-condensation reachability is a performance optimization over per-node BFS,
 /// and its ordering requirements are subtle enough to have been wrong twice. Check it
 /// against the obvious implementation on every fixture, in both directions.

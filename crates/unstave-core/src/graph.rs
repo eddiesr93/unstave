@@ -66,7 +66,7 @@ impl ModuleGraph {
                 path: module.facts.path.clone(),
                 facts: module.facts.clone(),
             });
-            index.insert(module.facts.path.clone(), idx);
+            index.insert(module_key(&module.facts.path), idx);
         }
 
         let mut dangling = Vec::new();
@@ -75,7 +75,7 @@ impl ModuleGraph {
         let mut seen = std::collections::HashSet::new();
 
         for module in modules {
-            let Some(&from) = index.get(&module.facts.path) else {
+            let Some(&from) = index.get(&module_key(&module.facts.path)) else {
                 continue;
             };
 
@@ -86,7 +86,7 @@ impl ModuleGraph {
                 let Resolved::Internal { path } = resolved else {
                     continue;
                 };
-                match index.get(path) {
+                match index.get(&module_key(path)) {
                     Some(&to) => {
                         if seen.insert((from, to, kind)) {
                             graph.add_edge(from, to, kind);
@@ -120,7 +120,7 @@ impl ModuleGraph {
     }
 
     pub fn index_of(&self, path: &Path) -> Option<NodeIndex> {
-        self.index.get(path).copied()
+        self.index.get(&module_key(path)).copied()
     }
 
     pub fn node(&self, idx: NodeIndex) -> &ModuleNode {
@@ -267,4 +267,18 @@ fn edge_kinds(facts: &ModuleFacts) -> Vec<(&str, EdgeKind)> {
     }
 
     edges
+}
+
+/// Canonical key for a module path used by the graph's node index.
+///
+/// Module paths enter the graph from two sources: the canonicalised paths produced by
+/// discovery, and the paths returned by the resolver. On Windows the resolver can emit
+/// paths whose separators differ from the canonical form (a `src/clients/x.ts` produced
+/// from a `tsconfig` `paths` alias may arrive with `/` where discovery uses `\`). Keying
+/// the index by a separator-normalised path keeps the two sources comparable, so graph
+/// edges (and the fan-in/fan-out built from them) are identical on every platform. The
+/// stored [`ModuleNode::path`] is left untouched — native separators are only an issue
+/// for the index comparison, not for display (report paths are normalised separately).
+fn module_key(path: &Path) -> PathBuf {
+    PathBuf::from(path.to_string_lossy().replace('\\', "/"))
 }

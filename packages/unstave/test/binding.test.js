@@ -101,7 +101,9 @@ test('analyze rejects when the root does not exist', async () => {
   await assert.rejects(
     analyze({ root: join(__dirname, 'definitely-not-a-real-workspace'), noCache: true }),
     (err) => {
-      assert.match(err.message, /No such file or directory/)
+      // POSIX and Windows word ENOENT differently, but both surface the numeric
+      // `os error 2` code, so match the stable, platform-independent part.
+      assert.match(err.message, /\(os error 2\)/)
       // The structured `unstave_core::Error` variant is surfaced to JS via `err.cause`.
       assert.equal(err.cause?.message, 'Io')
       return true
