@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use unstave_core::pipeline::{analyze, relative};
-use unstave_core::{Config, Resolved, WorkspaceKind};
+use unstave_core::{Config, Error, Resolved, WorkspaceKind};
 
 fn fixture(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -202,4 +202,91 @@ fn excludes_are_honoured() {
         main.resolutions.get("./math"),
         Some(Resolved::Internal { .. })
     ));
+}
+
+#[test]
+fn reports_files_that_fail_to_parse() {
+    let analysis = run("parse-error");
+    let failures = analysis.parse_failures();
+
+    // Only the intentionally broken file fails; the well-formed one still parses.
+    assert_eq!(
+        failures.len(),
+        1,
+        "expected exactly one parse failure, got {failures:?}"
+    );
+    let (path, diagnostic) = failures[0];
+    assert!(
+        path.ends_with("broken.ts"),
+        "expected broken.ts to be reported, got {path:?}"
+    );
+    assert!(
+        !diagnostic.is_empty(),
+        "expected a non-empty parse diagnostic, got {diagnostic:?}"
+    );
+    assert!(
+        analysis
+            .modules
+            .iter()
+            .any(|m| m.path().ends_with("good.ts")),
+        "good.ts should still be parsed and present"
+    );
+}
+
+#[test]
+fn malformed_config_reports_a_config_error() {
+    let dir = std::env::temp_dir().join(format!(
+        "unstave-config-test-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("clock should be after epoch")
+            .as_nanos()
+    ));
+    std::fs::create_dir_all(&dir).expect("create config dir");
+    let config_path = dir.join("unstave.toml");
+    // Unbalanced brackets — this is not valid TOML.
+    std::fs::write(&config_path, "entrypoints = [\n").expect("write bad config");
+
+    let err = Config::load(&dir, Some(&config_path)).expect_err("malformed TOML must fail");
+
+    let text = err.to_string();
+    assert!(
+        matches!(err, Error::Config { .. }),
+        "expected a Config error, got {err:?}"
+    );
+    assert!(
+        text.contains("invalid config"),
+        "expected 'invalid config', got: {text}"
+    );
+
+    std::fs::remove_dir_all(&dir).ok();
+}
+
+#[test]
+fn nonexistent_root_errors() {
+    let root = std::env::temp_dir().join(format!(
+        "unstave-missing-root-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("clock should be after epoch")
+            .as_nanos()
+    ));
+    // Guard against a stale directory from a previous aborted run.
+    std::fs::remove_dir_all(&root).ok();
+
+    let err = analyze(&root, &Config::default())
+        .err()
+        .expect("nonexistent root must fail");
+
+    let text = err.to_string();
+    assert!(
+        matches!(err, Error::Io { .. }),
+        "expected an Io error, got {err:?}"
+    );
+    assert!(
+        text.contains("i/o error"),
+        "expected 'i/o error', got: {text}"
+    );
 }
