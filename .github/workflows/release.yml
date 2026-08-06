@@ -169,9 +169,27 @@ jobs:
       - name: Test native binding
         run: pnpm --filter @unstave/node test
 
+  # Musl-built NAPI addons are dynamically linked against musl libc and cannot
+  # be loaded on the glibc-based GitHub Actions runner, so the JS binding tests
+  # (which execute the .node file) cannot run for musl targets. Validate them at
+  # the packaging level instead: the built .node artifact exists and is non-empty.
+  validate-native-musl:
+    name: Validate musl bindings
+    needs: build-native
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: bindings-*-unknown-linux-musl
+          path: artifacts
+          merge-multiple: true
+      - name: Validate musl native bindings (packaging only)
+        run: bash scripts/validate-native-binding.sh artifacts
+
   publish-npm:
     name: Publish npm packages
-    needs: [validate, build-native, test-native]
+    needs: [validate, build-native, test-native, validate-native-musl]
     runs-on: ubuntu-latest
     permissions:
       contents: write
