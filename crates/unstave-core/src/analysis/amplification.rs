@@ -335,46 +335,39 @@ fn projected_closure(
     entry: NodeIndex,
     include_type_edges: bool,
 ) -> usize {
-    let mut seen = std::collections::HashSet::new();
-    let mut queue = std::collections::VecDeque::new();
-    seen.insert(entry);
-    queue.push_back(entry);
+    graph
+        .closure_from(std::iter::once(entry), |node| {
+            let path = graph.path_of(node).to_path_buf();
+            let redirects = rewrites.get(&path);
 
-    while let Some(node) = queue.pop_front() {
-        let path = graph.path_of(node).to_path_buf();
-        let redirects = rewrites.get(&path);
+            let mut next = Vec::new();
+            for successor in graph.successors(node, include_type_edges) {
+                let next_path = graph.path_of(successor).to_path_buf();
 
-        for next in graph.successors(node, include_type_edges) {
-            let next_path = graph.path_of(next).to_path_buf();
-
-            // If this importer's edge to that barrel is fully rewritable, the barrel
-            // and its closure are replaced by the definition sites.
-            if let Some(targets) = redirects.and_then(|r| r.get(&next_path)) {
-                for target in targets {
-                    let Some(target_node) = graph.index_of(target) else {
-                        continue;
-                    };
-                    // The definition may sit behind a re-export this edge filter drops
-                    // — a `export type { X }` chain when type edges are excluded. Such
-                    // a module was never in the "before" closure, so counting it here
-                    // would make the projection grow instead of shrink.
-                    if !forward.reaches(next, target_node) {
-                        continue;
+                // If this importer's edge to that barrel is fully rewritable, the barrel
+                // and its closure are replaced by the definition sites.
+                if let Some(targets) = redirects.and_then(|r| r.get(&next_path)) {
+                    for target in targets {
+                        let Some(target_node) = graph.index_of(target) else {
+                            continue;
+                        };
+                        // The definition may sit behind a re-export this edge filter drops
+                        // — a `export type { X }` chain when type edges are excluded. Such
+                        // a module was never in the "before" closure, so counting it here
+                        // would make the projection grow instead of shrink.
+                        if !forward.reaches(successor, target_node) {
+                            continue;
+                        }
+                        next.push(target_node);
                     }
-                    if seen.insert(target_node) {
-                        queue.push_back(target_node);
-                    }
+                    continue;
                 }
-                continue;
-            }
 
-            if seen.insert(next) {
-                queue.push_back(next);
+                next.push(successor);
             }
-        }
-    }
-
-    seen.len()
+            next
+        })
+        .len()
 }
 
 fn count_skips(sites: &[ImportSite]) -> Vec<(SkipReason, usize)> {

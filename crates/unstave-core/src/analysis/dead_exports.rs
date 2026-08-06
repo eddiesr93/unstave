@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet, HashSet, VecDeque};
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::PathBuf;
 
 use petgraph::graph::NodeIndex;
@@ -154,21 +154,9 @@ fn closure_paths(
     roots: Vec<NodeIndex>,
     include_type_edges: bool,
 ) -> HashSet<PathBuf> {
-    let mut seen = HashSet::new();
-    let mut queue = VecDeque::new();
-    for root in roots {
-        if seen.insert(root) {
-            queue.push_back(root);
-        }
-    }
-    while let Some(node) = queue.pop_front() {
-        for successor in graph.successors(node, include_type_edges) {
-            if seen.insert(successor) {
-                queue.push_back(successor);
-            }
-        }
-    }
-    seen.into_iter()
+    graph
+        .closure_from(roots, |node| graph.successors(node, include_type_edges))
+        .into_iter()
         .map(|node| graph.path_of(node).to_path_buf())
         .collect()
 }

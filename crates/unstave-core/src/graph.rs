@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::path::{Path, PathBuf};
 
 use petgraph::graph::NodeIndex;
@@ -148,6 +148,40 @@ impl ModuleGraph {
     /// Direct predecessors along edges that pass `filter`.
     pub fn predecessors(&self, node: NodeIndex, include_type_edges: bool) -> Vec<NodeIndex> {
         self.neighbors(node, Direction::Incoming, include_type_edges)
+    }
+
+    /// Breadth-first transitive closure walk, shared by every analysis that needs to
+    /// gather the modules reachable from a set of roots.
+    ///
+    /// Starts from `roots` and repeatedly expands each visited node through `expand`,
+    /// which supplies the nodes to visit next. `expand` may follow outgoing edges via
+    /// [`Self::successors`] or redirect them (e.g. a rewritable barrel import replaced
+    /// by its definition sites), so any traversal shares this one deterministic BFS.
+    /// Returns the closure as a sorted [`BTreeSet`], roots included.
+    pub fn closure_from<I, F>(
+        &self,
+        roots: impl IntoIterator<Item = NodeIndex>,
+        mut expand: F,
+    ) -> BTreeSet<NodeIndex>
+    where
+        F: FnMut(NodeIndex) -> I,
+        I: IntoIterator<Item = NodeIndex>,
+    {
+        let mut seen = BTreeSet::new();
+        let mut queue = VecDeque::new();
+        for root in roots {
+            if seen.insert(root) {
+                queue.push_back(root);
+            }
+        }
+        while let Some(node) = queue.pop_front() {
+            for next in expand(node) {
+                if seen.insert(next) {
+                    queue.push_back(next);
+                }
+            }
+        }
+        seen
     }
 
     fn neighbors(
