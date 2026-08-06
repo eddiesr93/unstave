@@ -142,7 +142,7 @@ mod tests {
         })
         .expect("fixture should analyze");
 
-        assert_eq!(report["schemaVersion"], 1);
+        assert_eq!(report["schemaVersion"], 2);
         assert_eq!(report["summary"]["filesAnalyzed"], 3);
     }
 
@@ -160,6 +160,6 @@ mod tests {
             unstave_report::html::render_value(&report, unstave_report::html::DEFAULT_MAX_NODES)
                 .expect("report should render");
         assert!(html.starts_with("<!doctype html>"));
-        assert!(html.contains("\"schemaVersion\":1"));
+        assert!(html.contains("\"schemaVersion\":2"));
     }
 }

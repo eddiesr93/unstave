@@ -3,7 +3,7 @@ source: crates/unstave-report/tests/report_renderers.rs
 expression: rendered
 ---
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "workspace": {
     "root": ".",
     "kind": "pnpm",

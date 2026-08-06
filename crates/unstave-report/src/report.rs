@@ -18,7 +18,7 @@ use unstave_core::graph::{EdgeKind, ModuleGraph};
 use unstave_core::{Analysis, Config};
 
 /// Current public JSON schema version.
-pub const SCHEMA_VERSION: u32 = 1;
+pub const SCHEMA_VERSION: u32 = 2;
 
 /// Everything every renderer needs, with no terminal or filesystem policy.
 #[derive(Debug, Clone, Serialize)]
@@ -194,8 +194,8 @@ pub struct ImportSiteReport {
     pub actual_cost: usize,
     pub minimal_cost: usize,
     pub excess: usize,
-    /// `null` means unbounded because the minimal cost is zero.
-    pub amplification: Option<f64>,
+    /// Always a finite number: never `null`, never infinite.
+    pub amplification: f64,
     pub rewritable: Vec<RewritableSymbolReport>,
     pub skipped: Vec<SkippedSymbolReport>,
 }
@@ -222,8 +222,8 @@ pub struct BarrelAmplificationReport {
     pub actual_cost: usize,
     pub worst_excess: usize,
     pub total_excess: usize,
-    /// `null` means unbounded because at least one minimal cost is zero.
-    pub max_amplification: Option<f64>,
+    /// Always a finite number: never `null`, never infinite.
+    pub max_amplification: f64,
     pub has_side_effects: bool,
     pub rewritable_symbols: usize,
     pub skipped_symbols: usize,
@@ -496,7 +496,7 @@ fn amplification_report(
                 actual_cost: site.actual_cost,
                 minimal_cost: site.minimal_cost,
                 excess: site.excess(),
-                amplification: finite(site.amplification()),
+                amplification: site.amplification(),
                 rewritable: site
                     .rewritable
                     .iter()
@@ -524,7 +524,7 @@ fn amplification_report(
                 actual_cost: barrel.actual_cost,
                 worst_excess: barrel.worst_excess,
                 total_excess: barrel.total_excess,
-                max_amplification: finite(barrel.max_amplification),
+                max_amplification: barrel.max_amplification,
                 has_side_effects: barrel.has_side_effects,
                 rewritable_symbols: barrel.rewritable_symbols,
                 skipped_symbols: barrel.skipped_symbols,
@@ -549,10 +549,6 @@ fn amplification_report(
             })
             .collect(),
     }
-}
-
-fn finite(value: f64) -> Option<f64> {
-    value.is_finite().then_some(value)
 }
 
 fn directory_of(path: &str) -> String {

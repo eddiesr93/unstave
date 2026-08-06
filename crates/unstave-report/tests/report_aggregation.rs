@@ -51,7 +51,7 @@ fn barrel_amplification_reports_exact_values_for_pure_barrel() {
     assert_eq!(barrel.actual_cost, 6);
     assert_eq!(barrel.worst_excess, 5);
     assert_eq!(barrel.total_excess, 5);
-    assert_eq!(barrel.max_amplification, Some(6.0));
+    assert_eq!(barrel.max_amplification, 6.0);
     assert_eq!(barrel.rewritable_symbols, 1);
     assert_eq!(barrel.skipped_symbols, 0);
     assert!(!barrel.has_side_effects);
@@ -73,20 +73,15 @@ fn barrel_amplification_max_equals_max_over_import_sites() {
     assert_eq!(site.actual_cost, 6);
     assert_eq!(site.minimal_cost, 1);
     assert_eq!(site.excess, 5);
-    assert_eq!(site.amplification, Some(6.0));
+    assert_eq!(site.amplification, 6.0);
 
     // The aggregate must be the exact max over every import site, never a guess.
     let barrels = &report.amplification.barrels;
     assert_eq!(barrels.len(), 1);
-    let max_over_sites =
-        sites
-            .iter()
-            .map(|site| site.amplification)
-            .fold(None, |acc, value| match (acc, value) {
-                (None, value) => value,
-                (Some(a), Some(b)) => Some(a.max(b)),
-                (acc, None) => acc,
-            });
+    let max_over_sites = sites
+        .iter()
+        .map(|site| site.amplification)
+        .fold(0.0_f64, f64::max);
     assert_eq!(barrels[0].max_amplification, max_over_sites);
     // `totalExcess` is the sum of every site's excess, so it dominates each of them.
     assert!(barrels[0].total_excess >= barrels[0].worst_excess);
@@ -153,4 +148,68 @@ fn dead_export_low_confidence_propagates_for_star_exports() {
     // Declared/imported directly: the analysis is confident.
     assert!(!by("src/main.ts", "all").low_confidence);
     assert!(!by("src/shadowed.ts", "shared").low_confidence);
+}
+
+#[test]
+fn bare_barrel_imports_cost_exactly_what_they_need() {
+    // `src/main.ts` reaches the barrel twice without naming a symbol: a side-effect
+    // `import './widgets/index'` and a dynamic `import('./widgets/index')`. Neither
+    // can be rewritten, so the barrel's whole closure (4 modules: the barrel plus
+    // three widgets) is the minimal cost as well as the actual one — zero excess and
+    // an amplification of exactly 1.0. Treating the definition set as empty here used
+    // to make both sites divide by zero and report the closure as removable excess.
+    let report = report("bare-barrel-import");
+
+    let sites = &report.amplification.sites;
+    assert_eq!(sites.len(), 2);
+    for site in sites {
+        assert_eq!(site.barrel, "src/widgets/index.ts");
+        assert!(site.symbols.is_empty());
+        assert_eq!(site.actual_cost, 4);
+        assert_eq!(site.minimal_cost, 4);
+        assert_eq!(site.excess, 0);
+        assert_eq!(site.amplification, 1.0);
+    }
+
+    assert_eq!(report.amplification.barrels.len(), 1);
+    let barrel = &report.amplification.barrels[0];
+    assert_eq!(barrel.import_sites, 2);
+    assert_eq!(barrel.total_excess, 0);
+    assert_eq!(barrel.worst_excess, 0);
+    assert_eq!(barrel.max_amplification, 1.0);
+}
+
+/// §7 makes the JSON the versioned, CI-consumable artifact, so every amplification
+/// value in it has to be a number a consumer can compare against a threshold.
+/// `serde_json` writes a non-finite `f64` as `null`, which silently makes
+/// `site.amplification > threshold` false instead of true.
+#[test]
+fn json_amplification_values_are_never_null() {
+    for name in [
+        "bare-barrel-import",
+        "pure-barrel",
+        "nested-barrels",
+        "star-collision",
+        "side-effects",
+        "monorepo",
+        "cycles",
+    ] {
+        let json = serde_json::to_value(report(name)).expect("report should serialize");
+        let amplification = &json["amplification"];
+
+        for site in amplification["sites"].as_array().expect("sites array") {
+            assert!(
+                site["amplification"].as_f64().is_some_and(f64::is_finite),
+                "{name}: site amplification is not a finite number: {site}"
+            );
+        }
+        for barrel in amplification["barrels"].as_array().expect("barrels array") {
+            assert!(
+                barrel["maxAmplification"]
+                    .as_f64()
+                    .is_some_and(f64::is_finite),
+                "{name}: barrel maxAmplification is not a finite number: {barrel}"
+            );
+        }
+    }
 }

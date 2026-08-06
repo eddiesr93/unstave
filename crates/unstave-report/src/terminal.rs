@@ -159,7 +159,7 @@ pub fn render_report(report: &AnalysisReport, opts: &RenderOptions) -> String {
                 Cell::new(barrel.actual_cost),
                 Cell::new(barrel.total_excess),
                 Cell::new(barrel.worst_excess),
-                Cell::new(format_optional_ratio(barrel.max_amplification)),
+                Cell::new(format_ratio(barrel.max_amplification)),
                 Cell::new(format!(
                     "{}/{}",
                     barrel.rewritable_symbols,
@@ -335,10 +335,6 @@ fn push_more(out: &mut String, total: usize, shown: usize, opts: &RenderOptions)
             ))
         );
     }
-}
-
-fn format_optional_ratio(value: Option<f64>) -> String {
-    value.map_or_else(|| "∞".to_string(), |ratio| format!("{ratio:.1}×"))
 }
 
 /// Barrel amplification — the headline report.
@@ -523,11 +519,7 @@ fn skips_table(skips: &[(SkipReason, usize)], opts: &RenderOptions) -> String {
 }
 
 fn format_ratio(value: f64) -> String {
-    if value.is_infinite() {
-        "∞".to_string()
-    } else {
-        format!("{value:.1}×")
-    }
+    format!("{value:.1}×")
 }
 
 /// Focused output for the `cycles` subcommand.

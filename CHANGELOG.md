@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Breaking (JSON schema):** `schemaVersion` is now `2`. `amplification.sites[*].amplification`
+  and `amplification.barrels[*].maxAmplification` are always finite numbers and are
+  never `null`. They previously serialized as `null` whenever the metric was infinite,
+  so a CI consumer writing `b.maxAmplification > threshold` silently got `false`
+  instead of a breach. When an import's symbols all resolve outside the workspace the
+  minimal cost is zero, and the ratio is now taken against a floor of one module
+  rather than reported as an infinity JSON cannot represent.
+
+### Fixed
+
+- Stop reporting a barrel's entire closure as removable excess for an import that
+  names no symbols. `import './barrel'` and `import('./barrel')` carry no bindings,
+  so nothing can be rewritten and the whole barrel is genuinely required — but their
+  minimal cost was computed from an empty definition set, making the excess equal to
+  the full actual cost and the amplification infinite. Such a site now costs exactly
+  what it needs: zero excess, amplification 1.0, matching how namespace imports are
+  already treated. On `withastro/astro`, this drops `src/core/config/index.ts` from a
+  reported 167 total excess to 65 and takes `dev-toolbar/ui-library/index.ts` — which
+  had 13 excess against 0 rewritable symbols — down to 0.
+
 ## [0.1.5] - 2026-08-06
 
 ### Fixed

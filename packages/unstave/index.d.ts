@@ -14,7 +14,7 @@ export type { AnalyzeOptions }
  * in sync with `unstave_report::build_report`.
  */
 export interface AnalysisReport {
-  schemaVersion: 1
+  schemaVersion: 2
   workspace: { root: string; kind: string; packages: unknown[] }
   summary: {
     filesAnalyzed: number
@@ -26,7 +26,8 @@ export interface AnalysisReport {
   amplification: {
     barrels: Array<{
       barrel: string
-      maxAmplification: number | null
+      /** Always a finite number — never `null`, never `Infinity`. */
+      maxAmplification: number
       totalExcess: number
     }>
   }

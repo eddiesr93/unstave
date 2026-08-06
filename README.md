@@ -121,7 +121,7 @@ forced cold run and `unstave cache clear` to remove the exact cache file.
 
 Non-terminal formats are written as `unstave-report.json`, `.dot`, `.mmd`, and
 `.html`. The default directory is `<root>/.unstave`; `--out` overrides it. JSON is
-complete and versioned with `schemaVersion: 1`. The HTML report is a single portable
+complete and versioned with `schemaVersion: 2`. The HTML report is a single portable
 file with no CDN or runtime network dependency. All three graph formats — HTML, DOT,
 and Mermaid — group modules by directory and collapse large graphs to at most
 `--max-nodes` directory nodes (default: 150). Click a collapsed node in the HTML

@@ -5,6 +5,7 @@ use unstave_core::analysis::barrel::{self, BarrelKind};
 use unstave_core::analysis::dead_exports;
 use unstave_core::analysis::symbols::{Resolution, SymbolResolver};
 use unstave_core::config::BarrelConfig;
+use unstave_core::facts::Span;
 use unstave_core::graph::ModuleGraph;
 use unstave_core::pipeline::analyze;
 use unstave_core::{Analysis, Config};
@@ -439,4 +440,59 @@ fn star_reexported_definitions_are_low_confidence() {
             .unwrap_or_else(|| panic!("{name} should be unused"));
         assert!(export.low_confidence, "{name} is exposed through export *");
     }
+}
+
+#[test]
+fn an_import_naming_no_symbols_needs_the_whole_barrel() {
+    // Side-effect and dynamic imports carry no bindings, so there is no symbol to
+    // rewrite and the barrel's whole closure is genuinely required. Both sites must
+    // therefore report zero excess and an amplification of exactly 1.0 — an empty
+    // definition set would instead divide by zero and yield `f64::INFINITY`, which
+    // `serde_json` can only write as `null`.
+    let ctx = ctx("bare-barrel-import");
+    let r = ctx.resolver();
+    let barrels = barrel::classify(&ctx.graph, &BarrelConfig::default());
+    let report =
+        amplification::compute(&ctx.graph, &ctx.analysis.modules, &barrels, &r, &[], false);
+
+    assert_eq!(report.sites.len(), 2);
+    for site in &report.sites {
+        assert_eq!(ctx.rel(&site.barrel), "src/widgets/index.ts");
+        assert!(site.symbols.is_empty());
+        assert!(site.rewritable.is_empty());
+        assert!(!site.is_fully_rewritable());
+
+        // The barrel plus its three widgets, on both sides of the ratio.
+        assert_eq!(site.actual_cost, 4);
+        assert_eq!(site.minimal_cost, 4);
+        assert_eq!(site.excess(), 0);
+        assert_eq!(site.amplification(), 1.0);
+    }
+}
+
+#[test]
+fn amplification_is_finite_even_when_nothing_resolves_internally() {
+    // A minimal cost of zero means every symbol resolved out of the workspace. The
+    // ratio is taken against a floor of one module so the metric stays a number the
+    // JSON schema can promise, rather than an infinity that serializes as `null`.
+    let site = amplification::ImportSite {
+        importer: PathBuf::from("src/main.ts"),
+        barrel: PathBuf::from("src/index.ts"),
+        span: Span { start: 0, end: 0 },
+        symbols: vec!["external".to_string()],
+        actual_cost: 12,
+        minimal_cost: 0,
+        rewritable: Vec::new(),
+        skipped: vec![("external".to_string(), SkipReason::External)],
+    };
+
+    assert_eq!(site.amplification(), 12.0);
+    assert!(site.amplification().is_finite());
+
+    // An empty graph is the one case with no cost on either side: a ratio of 1.0.
+    let empty = amplification::ImportSite {
+        actual_cost: 0,
+        ..site
+    };
+    assert_eq!(empty.amplification(), 1.0);
 }

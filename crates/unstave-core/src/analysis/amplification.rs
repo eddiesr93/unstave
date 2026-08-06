@@ -41,16 +41,17 @@ impl ImportSite {
     }
 
     /// How many times more than necessary this import costs.
+    ///
+    /// Always finite, so the JSON schema can promise a number (§7). A minimal cost of
+    /// zero means every symbol resolved out of the workspace, and the ratio is taken
+    /// against a floor of one module — the importer still has to name *something* —
+    /// which makes the value the actual cost itself rather than an infinity that
+    /// `serde_json` would have to write as `null`.
     pub fn amplification(&self) -> f64 {
-        if self.minimal_cost == 0 {
-            // Nothing resolved, so there is no meaningful ratio to report.
-            return if self.actual_cost == 0 {
-                1.0
-            } else {
-                f64::INFINITY
-            };
+        if self.actual_cost == 0 {
+            return 1.0;
         }
-        self.actual_cost as f64 / self.minimal_cost as f64
+        self.actual_cost as f64 / self.minimal_cost.max(1) as f64
     }
 
     pub fn is_fully_rewritable(&self) -> bool {
@@ -188,6 +189,15 @@ fn build_site(
     let mut skipped = Vec::new();
     let mut definition_nodes: Vec<NodeIndex> = Vec::new();
     let mut symbol_names = Vec::new();
+
+    if import.bindings.is_empty() {
+        // `import './barrel'` and `import('./barrel')` name no symbols, so there is
+        // nothing to rewrite and the whole barrel is genuinely required — the same
+        // conclusion as a namespace import. Leaving the definition set empty here
+        // would report the barrel's entire closure as excess that a codemod could
+        // remove, and make the ratio a division by zero.
+        definition_nodes.push(target);
+    }
 
     for binding in &import.bindings {
         symbol_names.push(binding.imported.clone());

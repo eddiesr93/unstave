@@ -20,6 +20,7 @@ const FIXTURES: &[&str] = &[
     "aliases",
     "nested-barrels",
     "side-effects",
+    "bare-barrel-import",
 ];
 
 fn fixture(name: &str) -> PathBuf {
