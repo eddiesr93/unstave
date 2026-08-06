@@ -629,6 +629,8 @@ h1 em {
 }
 
 .graph-inspector {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   padding: var(--space-lg);
   border-top: 1px solid var(--line-soft);
@@ -651,14 +653,18 @@ h1 em {
 .graph-inspector dl {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: var(--space-xl) 0;
-  margin-inline-start: calc(var(--space-sm) * -1);
+  margin: var(--space-xl) 0 var(--space-lg);
+  margin-inline-start: calc(var(--space-xs) * -1);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 
 .graph-inspector dl div {
-  padding: var(--space-sm) 0 var(--space-sm) var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-2xs) var(--space-sm) var(--space-xs);
 }
 
 .graph-inspector dl div + div {
@@ -673,7 +679,7 @@ h1 em {
 }
 
 .graph-inspector dd {
-  margin: var(--space-2xs) 0 0;
+  margin: 0;
   color: var(--paper);
   font-family: var(--font-display);
   font-size: 1.5rem;
@@ -683,7 +689,10 @@ h1 em {
 }
 
 .inspector-note {
+  margin-top: auto;
   margin-bottom: 0;
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--line-soft);
   font-style: italic;
 }
 
