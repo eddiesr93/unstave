@@ -82,7 +82,7 @@ mod tests {
             Error::Resolver {
                 package: PathBuf::from("."),
                 message: "boom".to_string(),
-                source: Box::new(std::io::Error::new(std::io::ErrorKind::Other, "source")),
+                source: Box::new(std::io::Error::other("source")),
             }
             .variant_name(),
             "Resolver"
