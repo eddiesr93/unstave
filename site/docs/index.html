@@ -83,21 +83,12 @@
         <div class="docs-section-heading">
           <p class="section-kicker">02 / Installation</p>
           <h2 id="installation-title">Choose your entry point.</h2>
-          <p>The CLI can be installed from the repository today. Registry, Homebrew, and npm packages are prepared for the v0.1.0 release.</p>
+          <p>The CLI ships through crates.io and Homebrew. The Node API and the Vite plugin ship on npm under the <code>@unstave</code> scope.</p>
         </div>
 
         <div class="docs-subsection">
-          <h3>CLI from source</h3>
-          <p>This is the available installation path before the first registry release.</p>
-          <div class="docs-code">
-            <div class="docs-code-meta"><span>Terminal</span><button class="docs-copy" type="button" data-copy-target="install-source-command">Copy</button></div>
-            <pre><code id="install-source-command">cargo install --git https://github.com/eddiesr93/unstave unstave-cli</code></pre>
-          </div>
-        </div>
-
-        <div class="docs-subsection">
-          <h3>Release channels</h3>
-          <p>These commands become the standard install paths once v0.1.0 is published.</p>
+          <h3>CLI</h3>
+          <p>Cargo builds the binary from the published crate; the Homebrew tap does the same behind a formula.</p>
           <div class="docs-code">
             <div class="docs-code-meta"><span>Cargo and Homebrew</span><button class="docs-copy" type="button" data-copy-target="install-release-command">Copy</button></div>
             <pre><code id="install-release-command">cargo install unstave-cli
@@ -109,11 +100,25 @@ brew install unstave</code></pre>
 
         <div class="docs-subsection">
           <h3>Node and Vite</h3>
-          <p>Install only the native API, only the Vite plugin, or both.</p>
-          <div class="docs-code">
-            <div class="docs-code-meta"><span>npm</span><button class="docs-copy" type="button" data-copy-target="install-node-command">Copy</button></div>
-            <pre><code id="install-node-command">npm install @unstave/node
-npm install --save-dev @unstave/vite-plugin</code></pre>
+          <p>The Vite plugin depends on the native API, so installing <code>@unstave/vite-plugin</code> pulls <code>@unstave/node</code> with it. Install <code>@unstave/node</code> on its own only when you call <code>analyze</code> directly.</p>
+          <div class="docs-code" data-pm-group>
+            <div class="docs-code-meta">
+              <div class="pm-tabs" role="tablist" aria-label="Package manager">
+                <button type="button" role="tab" aria-selected="true" data-pm-tab="npm" aria-controls="install-node-npm">npm</button>
+                <button type="button" role="tab" aria-selected="false" data-pm-tab="pnpm" aria-controls="install-node-pnpm">pnpm</button>
+                <button type="button" role="tab" aria-selected="false" data-pm-tab="yarn" aria-controls="install-node-yarn">Yarn</button>
+                <button type="button" role="tab" aria-selected="false" data-pm-tab="bun" aria-controls="install-node-bun">Bun</button>
+              </div>
+              <button class="docs-copy" type="button" data-copy-target="install-node-npm">Copy</button>
+            </div>
+            <pre data-pm-panel="npm"><code id="install-node-npm">npm install --save-dev @unstave/vite-plugin
+npm install @unstave/node</code></pre>
+            <pre data-pm-panel="pnpm" hidden><code id="install-node-pnpm">pnpm add -D @unstave/vite-plugin
+pnpm add @unstave/node</code></pre>
+            <pre data-pm-panel="yarn" hidden><code id="install-node-yarn">yarn add -D @unstave/vite-plugin
+yarn add @unstave/node</code></pre>
+            <pre data-pm-panel="bun" hidden><code id="install-node-bun">bun add -d @unstave/vite-plugin
+bun add @unstave/node</code></pre>
           </div>
         </div>
       </section>

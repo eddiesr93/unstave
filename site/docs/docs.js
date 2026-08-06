@@ -47,6 +47,40 @@
     input.remove()
   }
 
+  document.querySelectorAll('[data-pm-group]').forEach((group) => {
+    const tabs = [...group.querySelectorAll('[data-pm-tab]')]
+    const panels = [...group.querySelectorAll('[data-pm-panel]')]
+    const copyButton = group.querySelector('[data-copy-target]')
+
+    function selectManager(tab) {
+      tabs.forEach((button) => {
+        const active = button === tab
+        button.setAttribute('aria-selected', String(active))
+        button.tabIndex = active ? 0 : -1
+      })
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.pmPanel !== tab.dataset.pmTab
+      })
+      const active = panels.find((panel) => !panel.hidden)
+      if (copyButton && active?.firstElementChild) {
+        copyButton.dataset.copyTarget = active.firstElementChild.id
+      }
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.tabIndex = tab.getAttribute('aria-selected') === 'true' ? 0 : -1
+      tab.addEventListener('click', () => selectManager(tab))
+      tab.addEventListener('keydown', (event) => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+        event.preventDefault()
+        const direction = event.key === 'ArrowRight' ? 1 : -1
+        const next = tabs[(index + direction + tabs.length) % tabs.length]
+        selectManager(next)
+        next.focus()
+      })
+    })
+  })
+
   document.querySelectorAll('[data-copy-target]').forEach((button) => {
     button.addEventListener('click', async () => {
       const source = document.getElementById(button.dataset.copyTarget)

@@ -35,11 +35,23 @@ brew tap eddiesr93/unstave https://github.com/eddiesr93/unstave
 brew install unstave
 ```
 
-The native Node API and Vite integration are published separately:
+The native Node API and Vite integration are published separately. The Vite plugin
+depends on the native API, so installing it pulls `@unstave/node` in as well:
+
+```bash
+npm install --save-dev @unstave/vite-plugin
+pnpm add -D @unstave/vite-plugin
+yarn add -D @unstave/vite-plugin
+bun add -d @unstave/vite-plugin
+```
+
+Install `@unstave/node` on its own when you call `analyze` directly:
 
 ```bash
 npm install @unstave/node
-npm install --save-dev @unstave/vite-plugin
+pnpm add @unstave/node
+yarn add @unstave/node
+bun add @unstave/node
 ```
 
 ## Usage

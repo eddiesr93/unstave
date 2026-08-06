@@ -978,8 +978,17 @@ h1 em {
 
 .install-tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-bottom: 1px solid var(--line-soft);
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.install-tabs button {
+  border-block-end: 1px solid var(--line-soft);
+}
+
+@media (max-width: 30rem) {
+  .install-tabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .install-content {
@@ -1291,6 +1300,32 @@ footer p {
   max-width: 62rem;
   border: 1px solid var(--line);
   background: var(--ink);
+}
+
+.pm-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin-inline-start: calc(var(--space-md) * -1);
+}
+
+.pm-tabs button {
+  min-height: 2.75rem;
+  padding-inline: var(--space-md);
+  border: 0;
+  background: transparent;
+  color: var(--paper-faint);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background-color 140ms linear, color 140ms linear;
+}
+
+.pm-tabs button:hover,
+.pm-tabs button[aria-selected="true"] {
+  background: var(--acid);
+  color: var(--ink-deep);
 }
 
 .docs-code-meta {
