@@ -9,7 +9,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/eddiesr93/unstave"
@@ -20,10 +20,10 @@ categories = ["development-tools", "command-line-utilities"]
 rust-version = "1.82"
 
 [workspace.dependencies]
-unstave-core = { path = "crates/unstave-core", version = "0.1.2" }
-unstave-report = { path = "crates/unstave-report", version = "0.1.2" }
-unstave-codemod = { path = "crates/unstave-codemod", version = "0.1.2" }
-unstave-napi = { path = "crates/unstave-napi", version = "0.1.2" }
+unstave-core = { path = "crates/unstave-core", version = "0.1.3" }
+unstave-report = { path = "crates/unstave-report", version = "0.1.3" }
+unstave-codemod = { path = "crates/unstave-codemod", version = "0.1.3" }
+unstave-napi = { path = "crates/unstave-napi", version = "0.1.3" }
 
 # oxc crates release in lockstep — keep this single version pinned across the workspace.
 oxc_allocator = "=0.143.0"

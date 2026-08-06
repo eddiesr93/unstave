@@ -4,7 +4,7 @@ All publishable manifests must have the same version. Verify that invariant befo
 creating a release tag:
 
 ```bash
-node scripts/check-release-version.mjs 0.1.0
+node scripts/check-release-version.mjs 0.1.3
 cargo install --locked --path crates/unstave-cli --root /tmp/unstave-install
 cargo package --workspace --locked --no-verify
 pnpm build
