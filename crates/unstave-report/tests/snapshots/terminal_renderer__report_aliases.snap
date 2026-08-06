@@ -1,0 +1,74 @@
+---
+source: crates/unstave-report/tests/terminal_renderer.rs
+expression: rendered
+---
+┌───────────────────────┬───────┐
+│ metric                ┆ value │
+╞═══════════════════════╪═══════╡
+│ files analyzed        ┆ 4     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ packages              ┆ 1     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ modules               ┆ 4     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ edges                 ┆ 3     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ external packages     ┆ 0     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ unresolved specifiers ┆ 0     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ cycles                ┆ 0     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ dead exports          ┆ 1     │
+└───────────────────────┴───────┘
+
+No cycles.
+
+Dead exports
+┌─────────────┬────────┬────────────┐
+│ module      ┆ export ┆ confidence │
+╞═════════════╪════════╪════════════╡
+│ src/main.ts ┆ used   ┆ high       │
+└─────────────┴────────┴────────────┘
+
+Fan-in (most depended upon)
+┌────────────────────┬────────┬────────────┐
+│ module             ┆ direct ┆ transitive │
+╞════════════════════╪════════╪════════════╡
+│ src/inner/impl.ts  ┆ 1      ┆ 3          │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/inner/index.ts ┆ 1      ┆ 2          │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/index.ts       ┆ 1      ┆ 1          │
+└────────────────────┴────────┴────────────┘
+
+Fan-out (pulls in the most)
+┌────────────────────┬────────┬────────────┐
+│ module             ┆ direct ┆ transitive │
+╞════════════════════╪════════╪════════════╡
+│ src/main.ts        ┆ 1      ┆ 3          │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/index.ts       ┆ 1      ┆ 2          │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/inner/index.ts ┆ 1      ┆ 1          │
+└────────────────────┴────────┴────────────┘
+
+2 barrel(s) classified, 1 of them imported
+
+Barrel amplification
+┌──────────────┬───────┬──────┬────────┬───────┬──────┬────────────┐
+│ barrel       ┆ sites ┆ cost ┆ excess ┆ worst ┆ amp  ┆ rewritable │
+╞══════════════╪═══════╪══════╪════════╪═══════╪══════╪════════════╡
+│ src/index.ts ┆ 1     ┆ 3    ┆ 2      ┆ 2     ┆ 3.0× ┆ 1/1        │
+└──────────────┴───────┴──────┴────────┴───────┴──────┴────────────┘
+
+Worst import sites
+┌────────────────────────────┬───────────┬────────┬─────────┬────────┐
+│ import site                ┆ symbols   ┆ actual ┆ minimal ┆ excess │
+╞════════════════════════════╪═══════════╪════════╪═════════╪════════╡
+│ src/main.ts → src/index.ts ┆ FinalName ┆ 3      ┆ 1       ┆ 2      │
+└────────────────────────────┴───────────┴────────┴─────────┴────────┘
+
+No entrypoints configured — set `entrypoints` in unstave.toml to see the projected per-entrypoint saving.
+
+discovery 0ms · parse 0ms · resolve 0ms · total 0ms

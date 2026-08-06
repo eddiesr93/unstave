@@ -1,0 +1,84 @@
+---
+source: crates/unstave-report/tests/terminal_renderer.rs
+expression: rendered
+---
+┌───────────────────────┬───────┐
+│ metric                ┆ value │
+╞═══════════════════════╪═══════╡
+│ files analyzed        ┆ 7     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ packages              ┆ 1     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ modules               ┆ 7     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ edges                 ┆ 7     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ external packages     ┆ 0     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ unresolved specifiers ┆ 0     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ cycles                ┆ 2     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ dead exports          ┆ 1     │
+└───────────────────────┴───────┘
+
+Cycles
+  4 modules:
+    ┌─ src/w.ts
+    ├─ src/x.ts
+    ├─ src/z.ts
+    └─ src/w.ts
+
+  2 modules:
+    ┌─ src/a.ts
+    ├─ src/b.ts
+    └─ src/a.ts
+
+Dead exports
+┌───────────────────┬────────────┬────────────┐
+│ module            ┆ export     ┆ confidence │
+╞═══════════════════╪════════════╪════════════╡
+│ src/standalone.ts ┆ standalone ┆ high       │
+└───────────────────┴────────────┴────────────┘
+
+Fan-in (most depended upon)
+┌──────────┬────────┬────────────┐
+│ module   ┆ direct ┆ transitive │
+╞══════════╪════════╪════════════╡
+│ src/z.ts ┆ 2      ┆ 4          │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/w.ts ┆ 1      ┆ 4          │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/x.ts ┆ 1      ┆ 4          │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/y.ts ┆ 1      ┆ 4          │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/a.ts ┆ 1      ┆ 2          │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/b.ts ┆ 1      ┆ 2          │
+└──────────┴────────┴────────────┘
+
+Fan-out (pulls in the most)
+┌──────────┬────────┬────────────┐
+│ module   ┆ direct ┆ transitive │
+╞══════════╪════════╪════════════╡
+│ src/x.ts ┆ 2      ┆ 4          │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/w.ts ┆ 1      ┆ 4          │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/y.ts ┆ 1      ┆ 4          │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/z.ts ┆ 1      ┆ 4          │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/a.ts ┆ 1      ┆ 2          │
+├╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/b.ts ┆ 1      ┆ 2          │
+└──────────┴────────┴────────────┘
+
+0 barrel(s) classified, 0 of them imported
+
+No barrel imports to report — nothing is importing through a barrel.
+
+No entrypoints configured — set `entrypoints` in unstave.toml to see the projected per-entrypoint saving.
+
+discovery 0ms · parse 0ms · resolve 0ms · total 0ms

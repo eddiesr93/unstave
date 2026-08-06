@@ -1,0 +1,17 @@
+---
+source: crates/unstave-report/tests/terminal_renderer.rs
+expression: rendered
+---
+2 cycle(s) covering 6 module(s)
+
+Cycles
+  4 modules:
+    ┌─ src/w.ts
+    ├─ src/x.ts
+    ├─ src/z.ts
+    └─ src/w.ts
+
+  2 modules:
+    ┌─ src/a.ts
+    ├─ src/b.ts
+    └─ src/a.ts

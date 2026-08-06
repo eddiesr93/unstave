@@ -1,0 +1,21 @@
+---
+source: crates/unstave-report/tests/terminal_renderer.rs
+expression: rendered
+---
+1 barrel(s) classified, 1 of them imported
+
+Barrel amplification
+┌──────────────────────┬───────┬──────┬────────┬───────┬──────┬────────────┐
+│ barrel               ┆ sites ┆ cost ┆ excess ┆ worst ┆ amp  ┆ rewritable │
+╞══════════════════════╪═══════╪══════╪════════╪═══════╪══════╪════════════╡
+│ src/clients/index.ts ┆ 1     ┆ 6    ┆ 5      ┆ 5     ┆ 6.0× ┆ 1/1        │
+└──────────────────────┴───────┴──────┴────────┴───────┴──────┴────────────┘
+
+Worst import sites
+┌────────────────────────────────────┬─────────────┬────────┬─────────┬────────┐
+│ import site                        ┆ symbols     ┆ actual ┆ minimal ┆ excess │
+╞════════════════════════════════════╪═════════════╪════════╪═════════╪════════╡
+│ src/main.ts → src/clients/index.ts ┆ AlphaClient ┆ 6      ┆ 1       ┆ 5      │
+└────────────────────────────────────┴─────────────┴────────┴─────────┴────────┘
+
+No entrypoints configured — set `entrypoints` in unstave.toml to see the projected per-entrypoint saving.

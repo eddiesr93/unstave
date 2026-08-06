@@ -1,0 +1,58 @@
+---
+source: crates/unstave-report/tests/terminal_renderer.rs
+expression: rendered
+---
+┌───────────────────────┬───────┐
+│ metric                ┆ value │
+╞═══════════════════════╪═══════╡
+│ files analyzed        ┆ 3     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ packages              ┆ 1     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ modules               ┆ 3     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ edges                 ┆ 3     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ external packages     ┆ 0     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ unresolved specifiers ┆ 0     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ cycles                ┆ 0     │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌┤
+│ dead exports          ┆ 2     │
+└───────────────────────┴───────┘
+
+No cycles.
+
+Dead exports
+┌─────────────┬────────┬────────────┐
+│ module      ┆ export ┆ confidence │
+╞═════════════╪════════╪════════════╡
+│ src/main.ts ┆ role   ┆ high       │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/main.ts ┆ value  ┆ high       │
+└─────────────┴────────┴────────────┘
+
+Fan-in (most depended upon)
+┌───────────────┬────────┬────────────┐
+│ module        ┆ direct ┆ transitive │
+╞═══════════════╪════════╪════════════╡
+│ src/helper.ts ┆ 1      ┆ 1          │
+├╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌┼╌╌╌╌╌╌╌╌╌╌╌╌┤
+│ src/types.ts  ┆ 1      ┆ 1          │
+└───────────────┴────────┴────────────┘
+
+Fan-out (pulls in the most)
+┌─────────────┬────────┬────────────┐
+│ module      ┆ direct ┆ transitive │
+╞═════════════╪════════╪════════════╡
+│ src/main.ts ┆ 2      ┆ 2          │
+└─────────────┴────────┴────────────┘
+
+0 barrel(s) classified, 0 of them imported
+
+No barrel imports to report — nothing is importing through a barrel.
+
+No entrypoints configured — set `entrypoints` in unstave.toml to see the projected per-entrypoint saving.
+
+discovery 0ms · parse 0ms · resolve 0ms · total 0ms
