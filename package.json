@@ -5,6 +5,10 @@
   "scripts": {
     "build": "pnpm --recursive build",
     "test": "pnpm --recursive test",
-    "typecheck": "pnpm --recursive typecheck"
+    "typecheck": "pnpm --recursive typecheck",
+    "lint": "oxlint"
+  },
+  "devDependencies": {
+    "oxlint": "^1.77.0"
   }
 }
