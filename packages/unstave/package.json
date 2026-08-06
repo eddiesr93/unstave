@@ -1,6 +1,6 @@
 {
   "name": "@unstave/node",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Native module-graph analysis for TypeScript and React workspaces",
   "license": "MIT",
   "repository": "github:eddiesr93/unstave",

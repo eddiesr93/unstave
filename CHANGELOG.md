@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-06
+
 ### Changed
 
 - **Breaking (JSON schema):** `schemaVersion` is now `2`. `amplification.sites[*].amplification`
@@ -95,7 +97,8 @@ Initial public release of the analyzers, CLI, NAPI bindings, and Vite plugin.
 - Fix the HTML report on large graphs, the entrypoint projection, and the
   warm-run cost.
 
-[Unreleased]: https://github.com/eddiesr93/unstave/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/eddiesr93/unstave/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/eddiesr93/unstave/compare/v0.1.5...v0.2.0
 [0.1.5]: https://github.com/eddiesr93/unstave/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/eddiesr93/unstave/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/eddiesr93/unstave/compare/v0.1.2...v0.1.3
