@@ -513,8 +513,17 @@ h1 em {
 .graph-node:hover,
 .graph-node:focus-visible {
   color: var(--paper);
-  outline: none;
   transform: scale(1.08);
+}
+
+.graph-node:focus {
+  outline: none;
+}
+
+.graph-node:focus-visible circle,
+.graph-node:focus-visible path {
+  stroke: var(--acid);
+  stroke-width: 3;
 }
 
 .graph-node circle,
@@ -641,18 +650,18 @@ h1 em {
 
 .graph-inspector dl {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: var(--space-xl) 0;
+  margin-inline-start: calc(var(--space-sm) * -1);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
 
 .graph-inspector dl div {
-  padding: var(--space-sm) 0;
+  padding: var(--space-sm) 0 var(--space-sm) var(--space-sm);
 }
 
 .graph-inspector dl div + div {
-  padding-inline-start: var(--space-sm);
   border-inline-start: 1px solid var(--line);
 }
 
@@ -667,9 +676,10 @@ h1 em {
   margin: var(--space-2xs) 0 0;
   color: var(--paper);
   font-family: var(--font-display);
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   line-height: 1;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .inspector-note {
