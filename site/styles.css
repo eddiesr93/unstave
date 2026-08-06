@@ -304,27 +304,6 @@ h1 em {
   color: var(--acid);
 }
 
-.hero-command {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  max-width: 43rem;
-  margin-top: var(--space-lg);
-  border: 1px solid var(--line-soft);
-  background: var(--ink);
-}
-
-.hero-command code {
-  min-width: 0;
-  overflow: hidden;
-  padding: var(--space-sm) var(--space-md);
-  color: var(--paper-muted);
-  font-size: var(--text-xs);
-  line-height: 1.75;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.hero-command button,
 .install-content button {
   min-width: 4.5rem;
   border: 0;
@@ -339,7 +318,6 @@ h1 em {
   transition: background-color 140ms linear, color 140ms linear;
 }
 
-.hero-command button:hover,
 .install-content button:hover {
   background: var(--acid);
   color: var(--ink-deep);
@@ -400,8 +378,7 @@ h1 em {
 .manifesto h2,
 .workflow h2,
 .performance h2,
-.integration h2,
-.install h2 {
+.integration h2 {
   margin: var(--space-xs) 0 0;
   font-family: var(--font-display);
   font-size: clamp(3rem, 7vw, 6rem);
@@ -790,8 +767,7 @@ h1 em {
 
 .workflow,
 .performance,
-.integration,
-.install {
+.integration {
   display: grid;
   gap: var(--space-3xl);
   padding-block: clamp(6rem, 13vw, 10rem);
@@ -799,8 +775,7 @@ h1 em {
 }
 
 .workflow-copy > p:not(.section-kicker),
-.integration-copy > p:not(.section-kicker),
-.install-heading > p:not(.section-kicker) {
+.integration-copy > p:not(.section-kicker) {
   max-width: 40rem;
   color: var(--paper-muted);
   font-size: var(--text-lede);
@@ -823,6 +798,11 @@ h1 em {
   border: 1px solid var(--line);
   border-radius: 2px;
   background: var(--ink);
+}
+
+.hero-install {
+  max-width: 43rem;
+  margin-top: var(--space-lg);
 }
 
 .window-bar {
@@ -972,7 +952,7 @@ h1 em {
   text-transform: uppercase;
 }
 
-.install {
+.integration {
   border-bottom: 0;
 }
 
@@ -1699,8 +1679,7 @@ footer p {
 
   .workflow,
   .performance,
-  .integration,
-  .install {
+  .integration {
     grid-template-columns: minmax(18rem, 0.8fr) minmax(24rem, 1.2fr);
     align-items: center;
   }
@@ -1837,7 +1816,7 @@ footer p {
 
   .site-header,
   .hero-actions,
-  .hero-command,
+  .install-panel,
   .view-switcher,
   .copy-toast,
   footer {
