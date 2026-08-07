@@ -6,8 +6,8 @@
 [![License: MIT](https://img.shields.io/github/license/eddiesr93/unstave.svg)](https://github.com/eddiesr93/unstave/blob/main/LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/eddiesr93/unstave.svg?style=social)](https://github.com/eddiesr93/unstave)
 
-**Your `index.ts` barrel files are why your dev server takes 20 seconds to start.
-`unstave` proves it, then fixes it.**
+**One `index.ts` import can drag 143 modules into your dev server's graph when it
+needs one. `unstave` measures it, then rewrites it.**
 
 [Product site](https://eddiesr93.github.io/unstave/) · [Documentation](https://eddiesr93.github.io/unstave/docs/) · [Installation](#install) · [Usage](#usage) · [Changelog](CHANGELOG.md) · [crates.io](https://crates.io/crates/unstave-cli) · [npm](https://www.npmjs.com/package/@unstave/node)
 
