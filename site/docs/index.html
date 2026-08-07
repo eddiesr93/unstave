@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#181b13">
   <meta name="robots" content="index, follow, max-image-preview:large">
-  <meta name="description" content="Install unstave, analyze a TypeScript module graph, inspect every CLI option, configure safe rewrites, and integrate with Node or Vite.">
+  <meta name="description" content="Install unstave, inspect every CLI option, configure safe rewrites, integrate with Node or Vite, and review validation on Vite, TanStack Query, and Astro.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="unstave documentation">
-  <meta property="og:description" content="Installation, CLI commands, options, configuration, codemod safety, Node API, and Vite integration.">
+  <meta property="og:description" content="Installation, CLI options, codemod safety, integrations, and reproducible validation on public TypeScript repositories.">
   <meta property="og:url" content="https://eddiesr93.github.io/unstave/docs/">
   <meta property="og:image" content="https://eddiesr93.github.io/unstave/og-image.png">
   <meta property="og:image:width" content="1200">
@@ -16,7 +16,7 @@
   <meta property="og:image:alt" content="unstave: see what one import drags into a TypeScript module graph">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="unstave documentation">
-  <meta name="twitter:description" content="Install unstave, inspect every CLI option, configure safe rewrites, and integrate with Node or Vite.">
+  <meta name="twitter:description" content="Install unstave, inspect every CLI option, and review reproducible validation on Vite, TanStack Query, and Astro.">
   <meta name="twitter:image" content="https://eddiesr93.github.io/unstave/og-image.png">
   <link rel="canonical" href="https://eddiesr93.github.io/unstave/docs/">
   <link rel="sitemap" type="application/xml" href="https://eddiesr93.github.io/unstave/sitemap.xml">
@@ -32,7 +32,7 @@
       "@context": "https://schema.org",
       "@type": "TechArticle",
       "headline": "unstave documentation",
-      "description": "Installation, CLI commands, options, configuration, codemod safety, Node API, and Vite integration.",
+      "description": "Installation, CLI commands, configuration, codemod safety, integrations, and real-world validation on public TypeScript repositories.",
       "url": "https://eddiesr93.github.io/unstave/docs/",
       "dateModified": "2026-08-07",
       "isPartOf": {
@@ -78,6 +78,7 @@
           <a href="#configuration" data-doc-link><span>06</span>Configuration</a>
           <a href="#safe-rewrites" data-doc-link><span>07</span>Safe rewrites</a>
           <a href="#integrations" data-doc-link><span>08</span>Integrations</a>
+          <a href="#real-projects" data-doc-link><span>09</span>Real projects</a>
         </nav>
       </div>
     </aside>
@@ -99,6 +100,7 @@
             <a href="#configuration"><span>06</span>Configuration</a>
             <a href="#safe-rewrites"><span>07</span>Safe rewrites</a>
             <a href="#integrations"><span>08</span>Integrations</a>
+            <a href="#real-projects"><span>09</span>Real projects</a>
           </nav>
         </details>
 
@@ -310,6 +312,7 @@ import_style = "preserve"</code></pre>
             <li>Source bytes outside the affected import spans.</li>
             <li>Imported aliases, default bindings, and type modifiers.</li>
             <li>The configured or predominant alias-versus-relative path style.</li>
+            <li>Explicit NodeNext runtime extensions and the file's semicolon convention.</li>
             <li>Existing compatible imports from the same direct module.</li>
           </ul>
           <h3>Rewrites are skipped when</h3>
@@ -388,6 +391,56 @@ const html = await renderHtml(report)</code></pre>
           <strong>Need implementation detail?</strong>
           <p>The repository README covers crate boundaries, benchmarks, release packaging, and contributor commands.</p>
           <a class="text-link" href="https://github.com/eddiesr93/unstave#readme">Open the repository README</a>
+        </div>
+      </section>
+
+      <section class="docs-section" id="real-projects" aria-labelledby="real-projects-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">09 / Real projects</p>
+          <h2 id="real-projects-title">Pinned code. Reproducible evidence.</h2>
+          <p>Three active TypeScript repositories were analyzed at exact commits with the release binary. Each cache figure is the median of three runs; each rewrite was applied only inside a disposable clone and analyzed again.</p>
+        </div>
+
+        <div class="docs-table-wrap">
+          <table class="docs-table evidence-table">
+            <thead><tr><th>Project</th><th>Graph</th><th>Median</th><th>Strongest targeted barrel</th><th>Safe rewrite</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><a href="https://github.com/vitejs/vite/commit/57fea001d154e7dd8d5d74d3082731f1dcfd31be">Vite <code>57fea00</code></a></td>
+                <td>1,546 modules<span class="evidence-secondary">20.9 MiB peak RSS</span></td>
+                <td>68 ms miss<span class="evidence-secondary">38 ms hit</span></td>
+                <td>5x peak<span class="evidence-secondary">18 total excess</span></td>
+                <td>4 files<span class="evidence-secondary">5 imports</span></td>
+              </tr>
+              <tr>
+                <td><a href="https://github.com/TanStack/query/commit/46d7f02f1c7b9fcd3255082cc7103e8bfa3dab76">TanStack Query <code>46d7f02</code></a></td>
+                <td>1,081 modules<span class="evidence-secondary">21.0 MiB peak RSS</span></td>
+                <td>41 ms miss<span class="evidence-secondary">26 ms hit</span></td>
+                <td>19x peak<span class="evidence-secondary">189 total excess</span></td>
+                <td>14 files<span class="evidence-secondary">14 imports</span></td>
+              </tr>
+              <tr>
+                <td><a href="https://github.com/withastro/astro/commit/fba468c228d8661d2383a80c74206075201a187b">Astro <code>fba468c</code></a></td>
+                <td>2,858 modules<span class="evidence-secondary">44.7 MiB peak RSS</span></td>
+                <td>154 ms miss<span class="evidence-secondary">93 ms hit</span></td>
+                <td>143x peak<span class="evidence-secondary">574 total excess</span></td>
+                <td>5 files<span class="evidence-secondary">5 imports</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="docs-callout">
+          <strong>Read the boundary, not just the number</strong>
+          <p>These are source-graph measurements, not claims of equivalent build-time savings. Dependencies were intentionally not installed, so unresolved third-party imports and dead-export totals are excluded.</p>
+          <a class="text-link" href="https://github.com/eddiesr93/unstave/blob/main/docs/real-world-validation.md">Open methodology and findings</a>
+        </div>
+
+        <div class="docs-code">
+          <div class="docs-code-meta"><span>Reproduce on a clean clone</span><button class="docs-copy" type="button" data-copy-target="validation-command">Copy</button></div>
+          <pre><code id="validation-command">unstave cache clear --root /path/to/project
+unstave analyze --root /path/to/project --format json --out /tmp/report
+unstave fix --root /path/to/project --barrel path/to/index.ts --dry-run</code></pre>
         </div>
       </section>
     </article>

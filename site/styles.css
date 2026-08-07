@@ -1718,6 +1718,24 @@ footer p {
   color: var(--paper-muted);
 }
 
+.docs-table a {
+  color: var(--paper);
+  text-decoration-color: var(--acid);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+
+.docs-table a:hover {
+  color: var(--acid);
+}
+
+.evidence-secondary {
+  display: block;
+  margin-top: var(--space-2xs);
+  color: var(--paper-faint);
+  font-size: var(--text-xs);
+}
+
 .docs-table td::before {
   display: block;
   margin-bottom: var(--space-2xs);
@@ -1738,6 +1756,26 @@ footer p {
 
 .docs-table td:nth-child(3)::before {
   content: "Behavior";
+}
+
+.evidence-table td:nth-child(1)::before {
+  content: "Project";
+}
+
+.evidence-table td:nth-child(2)::before {
+  content: "Graph";
+}
+
+.evidence-table td:nth-child(3)::before {
+  content: "Median";
+}
+
+.evidence-table td:nth-child(4)::before {
+  content: "Strongest targeted barrel";
+}
+
+.evidence-table td:nth-child(5)::before {
+  content: "Safe rewrite";
 }
 
 .docs-subsection {
@@ -1876,6 +1914,20 @@ footer p {
 
   .docs-table td:nth-child(2) {
     width: 9rem;
+  }
+
+  .evidence-table {
+    min-width: 58rem;
+  }
+
+  .evidence-table td:first-child {
+    width: 12rem;
+    white-space: normal;
+  }
+
+  .evidence-table td:nth-child(2),
+  .evidence-table td:nth-child(3) {
+    width: 9.5rem;
   }
 
   .docs-table td::before {

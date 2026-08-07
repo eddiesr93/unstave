@@ -56,6 +56,12 @@ Your own numbers depend entirely on how your barrels are shaped — run
 > excess to 65**, and `dev-toolbar/ui-library/index.ts` from **13 to 0**
 > ([changelog](CHANGELOG.md)).
 
+Fresh validation against pinned public revisions of Vite, TanStack Query, and
+Astro analyzed **1,081–2,858 modules in 26–93 ms warm**. Targeted dry runs found
+safe rewrites across all three repositories, including a **143x** Astro import
+site. The complete methodology, commit hashes, limitations, and before/after
+results are in the [real-world validation](docs/real-world-validation.md).
+
 If unstave surfaces a real bottleneck in your project,
 [star the repository](https://github.com/eddiesr93/unstave) so other TypeScript
 teams can find it.
@@ -268,8 +274,9 @@ under 200 ms:
 cargo bench -p unstave-core --bench pipeline
 ```
 
-See [docs/benchmarks.md](docs/benchmarks.md) for the latest measured results and
-machine details.
+See [docs/benchmarks.md](docs/benchmarks.md) for the synthetic performance
+benchmark and [docs/real-world-validation.md](docs/real-world-validation.md) for
+pinned Vite, TanStack Query, and Astro results.
 
 Built on [oxc](https://oxc.rs) for parsing and resolution. The `oxc_*` crates release
 in lockstep, so they are pinned to a single exact version across the workspace —
