@@ -1,0 +1,65 @@
+title: "[Result] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share what unstave found in a real workspace and what changed afterward. Remove proprietary paths, source code, credentials, and customer data before posting.
+
+  - type: input
+    id: version
+    attributes:
+      label: unstave version
+      description: Run `unstave --version`, or provide the npm package version.
+      placeholder: "0.2.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: How did you run unstave?
+      options:
+        - CLI
+        - Vite plugin
+        - Node API
+    validations:
+      required: true
+
+  - type: textarea
+    id: workspace
+    attributes:
+      label: Workspace profile
+      description: Describe the framework, approximate module count, and monorepo shape without naming a private project.
+      placeholder: Vite + React monorepo, approximately 4,000 TypeScript modules across 12 packages.
+    validations:
+      required: true
+
+  - type: textarea
+    id: finding
+    attributes:
+      label: What did unstave find?
+      description: Include the top amplification or structural finding and enough context to make the result useful.
+    validations:
+      required: true
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What changed?
+      description: Share the rewrite, configuration decision, or measured before-and-after result. It is fine if you decided not to change anything.
+    validations:
+      required: true
+
+  - type: textarea
+    id: artifact
+    attributes:
+      label: Public artifact
+      description: Optionally link a sanitized report, pull request, benchmark, or public repository.
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Data safety
+      options:
+        - label: I removed credentials, proprietary source code, private repository names, and customer data.
+          required: true

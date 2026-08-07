@@ -275,6 +275,18 @@ Built on [oxc](https://oxc.rs) for parsing and resolution. The `oxc_*` crates re
 in lockstep, so they are pinned to a single exact version across the workspace —
 mixing versions breaks the AST.
 
+## Community
+
+- [Share a result](https://github.com/eddiesr93/unstave/discussions/categories/show-and-tell)
+  from a real workspace: module count, top barrel, amplification, and the change
+  you made. Remove proprietary paths and source code first.
+- [Ask a question](https://github.com/eddiesr93/unstave/discussions/categories/q-a)
+  when you need help interpreting a report or configuring an integration.
+- [Propose an idea](https://github.com/eddiesr93/unstave/discussions/categories/ideas)
+  before turning a broad workflow improvement into an implementation issue.
+- Use a [bug report](https://github.com/eddiesr93/unstave/issues/new/choose) for
+  reproducible incorrect behavior.
+
 ## Contributing
 
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the build,

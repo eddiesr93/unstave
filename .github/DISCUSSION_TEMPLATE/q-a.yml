@@ -1,0 +1,56 @@
+title: "[Question] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use Q&A for help with installation, configuration, reports, and integrations. Reproducible incorrect behavior belongs in a bug report.
+
+  - type: input
+    id: version
+    attributes:
+      label: unstave version
+      description: Run `unstave --version`, or provide the npm package version.
+      placeholder: "0.2.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Product area
+      options:
+        - Installation
+        - CLI
+        - Configuration
+        - HTML, JSON, or terminal report
+        - Codemod
+        - Node API
+        - Vite plugin
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to do?
+      description: Describe the outcome you want and the relevant workspace shape.
+    validations:
+      required: true
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What have you tried?
+      description: Include the exact command or smallest relevant configuration and sanitized output.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I checked the documentation and searched existing discussions.
+          required: true
+        - label: I removed credentials, proprietary source code, and other sensitive data.
+          required: true
