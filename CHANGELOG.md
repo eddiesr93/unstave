@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-08-07
+
+### Fixed
+
+- Preserve explicit `.js`, `.mjs`, and `.cjs` runtime extensions when rewriting
+  TypeScript imports to their direct source definitions. This keeps NodeNext and
+  ESM imports runnable instead of replacing their runtime specifiers with source
+  extensions.
+- Preserve each source file's semicolon convention in generated imports so the
+  codemod produces formatter-clean changes in semicolon-free codebases.
+
+### Added
+
+- Publish reproducible validation against pinned Vite, TanStack Query, and Astro
+  revisions. The rewritten code passed Vite's package build and typecheck, 168
+  TanStack Query tests, and 84 targeted Astro tests.
+- Add a professional GitHub Pages landing page, structured documentation, sample
+  report, discovery metadata, contribution paths, and community templates.
+
 ## [0.2.0] - 2026-08-06
 
 ### Changed
@@ -97,7 +116,8 @@ Initial public release of the analyzers, CLI, NAPI bindings, and Vite plugin.
 - Fix the HTML report on large graphs, the entrypoint projection, and the
   warm-run cost.
 
-[Unreleased]: https://github.com/eddiesr93/unstave/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/eddiesr93/unstave/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/eddiesr93/unstave/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/eddiesr93/unstave/compare/v0.1.5...v0.2.0
 [0.1.5]: https://github.com/eddiesr93/unstave/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/eddiesr93/unstave/compare/v0.1.3...v0.1.4
