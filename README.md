@@ -62,7 +62,9 @@ safe rewrites across all three repositories, including a **143x** Astro import
 site. The rewritten code then passed Vite's build and typecheck, 168 TanStack
 Query tests, and 84 targeted Astro tests. The complete methodology, commit
 hashes, limitations, and before/after results are in the
-[real-world validation](docs/real-world-validation.md).
+[real-world validation](docs/real-world-validation.md). For the narrative version —
+what barrels cost, what the rewrites changed, and where the numbers stop applying —
+read [What barrel files actually cost](docs/articles/what-barrel-files-actually-cost.md).
 
 If unstave surfaces a real bottleneck in your project,
 [star the repository](https://github.com/eddiesr93/unstave) so other TypeScript
