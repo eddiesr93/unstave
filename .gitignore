@@ -8,6 +8,7 @@ packages/*/dist/
 packages/unstave/*.node
 packages/unstave/npm/**/*.node
 packages/unstave/native.d.ts
+packages/cli/npm/**/bin/
 crates/unstave-napi/*.node
 crates/unstave-napi/index.js
 crates/unstave-napi/index.d.ts

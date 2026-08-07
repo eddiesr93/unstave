@@ -12,6 +12,8 @@ importers:
         specifier: ^1.77.0
         version: 1.77.0
 
+  packages/cli: {}
+
   packages/unstave:
     devDependencies:
       '@napi-rs/cli':

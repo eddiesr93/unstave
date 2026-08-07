@@ -1,0 +1,26 @@
+{
+  "name": "@unstave/cli-linux-arm64-gnu",
+  "version": "0.2.1",
+  "cpu": [
+    "arm64"
+  ],
+  "files": [
+    "bin/unstave"
+  ],
+  "bin": {
+    "unstave": "bin/unstave"
+  },
+  "description": "The unstave CLI binary for your platform",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "repository": "github:eddiesr93/unstave",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "os": [
+    "linux"
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "name": "@unstave/cli",
+  "version": "0.2.1",
+  "description": "unstave CLI: measure and remove TypeScript barrel-file bloat — no Rust install required",
+  "keywords": [
+    "typescript",
+    "barrel",
+    "barrel-files",
+    "codemod",
+    "monorepo",
+    "static-analysis",
+    "build-performance",
+    "vite",
+    "cli",
+    "module-graph"
+  ],
+  "license": "MIT",
+  "repository": "github:eddiesr93/unstave",
+  "homepage": "https://eddiesr93.github.io/unstave/",
+  "bugs": {
+    "url": "https://github.com/eddiesr93/unstave/issues"
+  },
+  "type": "module",
+  "main": "bin/unstave.mjs",
+  "bin": {
+    "unstave": "bin/unstave.mjs"
+  },
+  "files": [
+    "bin",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "typecheck": "node --check bin/unstave.mjs && node --check bin/platform.mjs"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

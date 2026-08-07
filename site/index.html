@@ -84,14 +84,19 @@
         </div>
         <div class="install-panel hero-install" id="install">
           <div class="install-tabs" role="tablist" aria-label="Install method">
-            <button type="button" role="tab" aria-selected="true" aria-controls="install-npm" id="tab-npm" data-install-tab="npm">npm</button>
+            <button type="button" role="tab" aria-selected="true" aria-controls="install-npx" id="tab-npx" data-install-tab="npx">npx</button>
+            <button type="button" role="tab" aria-selected="false" aria-controls="install-npm" id="tab-npm" data-install-tab="npm">npm</button>
             <button type="button" role="tab" aria-selected="false" aria-controls="install-pnpm" id="tab-pnpm" data-install-tab="pnpm">pnpm</button>
             <button type="button" role="tab" aria-selected="false" aria-controls="install-yarn" id="tab-yarn" data-install-tab="yarn">Yarn</button>
             <button type="button" role="tab" aria-selected="false" aria-controls="install-bun" id="tab-bun" data-install-tab="bun">Bun</button>
             <button type="button" role="tab" aria-selected="false" aria-controls="install-cargo" id="tab-cargo" data-install-tab="cargo">Cargo</button>
             <button type="button" role="tab" aria-selected="false" aria-controls="install-brew" id="tab-brew" data-install-tab="brew">Homebrew</button>
           </div>
-          <div class="install-content" role="tabpanel" id="install-npm" aria-labelledby="tab-npm">
+          <div class="install-content" role="tabpanel" id="install-npx" aria-labelledby="tab-npx">
+            <code>npx @unstave/cli analyze</code>
+            <button type="button" data-copy="npx @unstave/cli analyze">Copy command</button>
+          </div>
+          <div class="install-content" role="tabpanel" id="install-npm" aria-labelledby="tab-npm" hidden>
             <code>npm install --save-dev @unstave/vite-plugin</code>
             <button type="button" data-copy="npm install --save-dev @unstave/vite-plugin">Copy command</button>
           </div>

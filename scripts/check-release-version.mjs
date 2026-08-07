@@ -15,11 +15,16 @@ const formulaVersion = formula.match(/tag: "v([^"]+)"/)?.[1]
 const packageFiles = [
   new URL('../packages/unstave/package.json', import.meta.url),
   new URL('../packages/vite-plugin-unstave/package.json', import.meta.url),
+  new URL('../packages/cli/package.json', import.meta.url),
 ]
 const nativePackages = new URL('../packages/unstave/npm', import.meta.url)
+const cliPackages = new URL('../packages/cli/npm', import.meta.url)
 
 for (const directory of readdirSync(nativePackages)) {
   packageFiles.push(new URL(`../packages/unstave/npm/${directory}/package.json`, import.meta.url))
+}
+for (const directory of readdirSync(cliPackages)) {
+  packageFiles.push(new URL(`../packages/cli/npm/${directory}/package.json`, import.meta.url))
 }
 
 const versions = new Map([

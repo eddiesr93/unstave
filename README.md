@@ -90,6 +90,20 @@ inference — and no bundle-size analysis.
 
 ## Install
 
+No Rust toolchain needed — run it anywhere with npm, or install the CLI globally:
+
+```bash
+# Try it on your own workspace — no install, no project changes.
+npx @unstave/cli analyze
+
+# Install once, use everywhere.
+npm install -g @unstave/cli
+```
+
+The npm package ships prebuilt binaries for macOS, Linux (glibc and musl), and
+Windows. It is a thin shim over the native binary, so output and behaviour are
+identical to the crates.io build.
+
 After publishing a version tag, install the CLI from crates.io:
 
 ```bash
