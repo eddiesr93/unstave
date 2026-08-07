@@ -103,8 +103,57 @@ fn alias_style_uses_the_shortest_matching_tsconfig_path() {
 }
 
 #[test]
+fn alias_style_uses_referenced_tsconfig_paths() {
+    // The fixture uses Vite's split-tsconfig layout: the root `tsconfig.json` has
+    // only `{ "files": [], "references": [...] }` and no `compilerOptions.paths`.
+    // The real `@/*` mapping lives in the referenced `tsconfig.app.json`. Alias
+    // rewrites must follow the reference and keep the `@/` convention rather than
+    // falling back to a relative specifier.
+    let root = fixture("split-tsconfig");
+    let config = Config::default();
+    let analysis = analyze(&root, &config).expect("fixture should analyze");
+    let graph = ModuleGraph::build(&analysis.modules);
+    let options = CodemodOptions {
+        import_style: ImportStyle::Alias,
+        ..CodemodOptions::default()
+    };
+
+    let result = plan(&analysis, &graph, &config, &options).expect("codemod should plan");
+
+    assert_eq!(result.files_changed(), 1);
+    assert_eq!(
+        result.files[0].rewritten.lines().next(),
+        Some("import { AlphaClient } from '@/clients/alpha';")
+    );
+    assert!(
+        !result.files[0].rewritten.contains("./clients/alpha"),
+        "the rewrite must not fall back to a relative specifier: {}",
+        result.files[0].rewritten
+    );
+}
+
+#[test]
 fn preserve_style_follows_the_importers_predominant_path_style() {
     let root = fixture("pure-barrel");
+    let config = Config::default();
+    let analysis = analyze(&root, &config).expect("fixture should analyze");
+    let graph = ModuleGraph::build(&analysis.modules);
+
+    let result =
+        plan(&analysis, &graph, &config, &CodemodOptions::default()).expect("codemod should plan");
+
+    assert_eq!(
+        result.files[0].rewritten.lines().next(),
+        Some("import { AlphaClient } from '@/clients/alpha';")
+    );
+}
+
+#[test]
+fn preserve_style_uses_referenced_tsconfig_paths() {
+    // The importer's only internal specifier is the `@/clients` alias, so
+    // `preserve` resolves to the alias style — which must still resolve through
+    // the split tsconfig's referenced paths.
+    let root = fixture("split-tsconfig");
     let config = Config::default();
     let analysis = analyze(&root, &config).expect("fixture should analyze");
     let graph = ModuleGraph::build(&analysis.modules);

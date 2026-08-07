@@ -6,7 +6,8 @@ use crate::error::{Error, Result};
 
 pub const CONFIG_FILE: &str = "unstave.toml";
 
-/// Everything in `unstave.toml` is optional; CLI flags layer on top via [`Config::merge_cli`].
+/// Everything in `unstave.toml` is optional; CLI flags layer on top via
+/// [`Config::load`] followed by the CLI's own flag handling.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct Config {

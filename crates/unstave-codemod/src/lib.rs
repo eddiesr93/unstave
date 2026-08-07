@@ -619,35 +619,110 @@ impl AliasRule {
     }
 }
 
+/// Load alias rules from `tsconfig`, following `references` and `extends`.
+///
+/// A root `tsconfig.json` that only lists project references (Vite's split
+/// tsconfig layout — `{ "files": [], "references": [...] }`) carries no `paths`
+/// of its own; the real `compilerOptions.paths` live in a referenced file such as
+/// `tsconfig.app.json`. Recursively visiting `extends` and `references` recovers
+/// those rules so alias rewrites keep the `@/` convention instead of silently
+/// falling back to relative specifiers.
+///
+/// Collection order is deterministic and encodes precedence:
+/// 1. `extends` targets (string or array) are visited first, so inherited rules
+///    are collected before this file's own rules can override them;
+/// 2. this file's own `compilerOptions.paths` rules come next (using *this*
+///    file's directory and `baseUrl`);
+/// 3. `references[]` entries are visited last, earlier references before later.
+///
+/// Every relative path (`extends` / `references` / `baseUrl` targets) resolves
+/// against the file that declares it — exactly how `tsc` and bundlers behave.
+/// Exact duplicate `(alias, target)` pairs are deduped, preserving first-seen
+/// order. A missing or unreadable tsconfig anywhere in the chain is skipped
+/// silently, so a dangling reference never breaks resolution.
 fn load_alias_rules(tsconfig: &Path) -> Vec<AliasRule> {
-    let Ok(mut text) = std::fs::read_to_string(tsconfig) else {
-        return Vec::new();
+    let mut rules = Vec::new();
+    let mut visited = Vec::new();
+    collect_tsconfig_paths(tsconfig, &mut rules, &mut visited);
+    dedupe_alias_rules(rules)
+}
+
+/// Cap on how deep the tsconfig `extends`/`references` chain may recurse. Paired
+/// with the visited set this keeps pathological config graphs (or cycles) bounded.
+const MAX_TSCONFIG_DEPTH: usize = 16;
+
+fn collect_tsconfig_paths(file: &Path, out: &mut Vec<AliasRule>, visited: &mut Vec<PathBuf>) {
+    if visited.len() >= MAX_TSCONFIG_DEPTH || visited.contains(&file.to_path_buf()) {
+        return;
+    }
+    visited.push(file.to_path_buf());
+
+    let Ok(mut text) = std::fs::read_to_string(file) else {
+        return;
     };
     if json_strip_comments::strip_comments_in_place(&mut text).is_err() {
-        return Vec::new();
+        return;
     }
     let Ok(json) = serde_json::from_str::<serde_json::Value>(&text) else {
-        return Vec::new();
+        return;
     };
+    let config_dir = file.parent().unwrap_or_else(|| Path::new("."));
+
+    // 1. `extends` first: inherited rules are collected before our own so that a
+    //    config's own `paths` win over anything it inherits.
+    if let Some(extends) = json.get("extends") {
+        let targets = match extends {
+            serde_json::Value::String(path) => vec![path.as_str()],
+            serde_json::Value::Array(array) => {
+                array.iter().filter_map(serde_json::Value::as_str).collect()
+            }
+            _ => Vec::new(),
+        };
+        for target in targets {
+            let resolved = normalize_path(&config_dir.join(target));
+            collect_tsconfig_paths(&resolved, out, visited);
+        }
+    }
+
+    // 2. This file's own rules (the exact original body, against THIS dir/baseUrl).
+    append_own_paths(&json, config_dir, out);
+
+    // 3. `references` last: the referenced configs' rules win over their own
+    //    ancestors but never over the referencing file's own `paths`.
+    if let Some(references) = json.get("references").and_then(serde_json::Value::as_array) {
+        for reference in references.iter().filter_map(serde_json::Value::as_object) {
+            let Some(path) = reference.get("path").and_then(serde_json::Value::as_str) else {
+                continue;
+            };
+            let mut resolved = normalize_path(&config_dir.join(path));
+            let extension = resolved.extension().and_then(|e| e.to_str());
+            if !matches!(extension, Some("json") | Some("ts")) {
+                resolved.set_extension("json");
+            }
+            collect_tsconfig_paths(&resolved, out, visited);
+        }
+    }
+}
+
+/// Append one config file's own `compilerOptions.paths` rules to `out`.
+fn append_own_paths(json: &serde_json::Value, config_dir: &Path, out: &mut Vec<AliasRule>) {
     let Some(compiler) = json.get("compilerOptions") else {
-        return Vec::new();
+        return;
     };
-    let config_dir = tsconfig.parent().unwrap_or_else(|| Path::new("."));
     let base = compiler
         .get("baseUrl")
         .and_then(serde_json::Value::as_str)
         .map_or_else(|| config_dir.to_path_buf(), |path| config_dir.join(path));
     let Some(paths) = compiler.get("paths").and_then(serde_json::Value::as_object) else {
-        return Vec::new();
+        return;
     };
 
-    let mut rules = Vec::new();
     for (alias, targets) in paths {
         let Some(targets) = targets.as_array() else {
             continue;
         };
         for target in targets.iter().filter_map(serde_json::Value::as_str) {
-            rules.push(AliasRule {
+            out.push(AliasRule {
                 alias: alias.clone(),
                 target: normalize_path(&base.join(target))
                     .to_string_lossy()
@@ -655,7 +730,15 @@ fn load_alias_rules(tsconfig: &Path) -> Vec<AliasRule> {
             });
         }
     }
+}
+
+/// Drop exact duplicate `(alias, target)` pairs, preserving first-seen order.
+fn dedupe_alias_rules(rules: Vec<AliasRule>) -> Vec<AliasRule> {
+    let mut seen = std::collections::HashSet::new();
     rules
+        .into_iter()
+        .filter(|rule| seen.insert((rule.alias.clone(), rule.target.clone())))
+        .collect()
 }
 
 fn normalize_path(path: &Path) -> PathBuf {

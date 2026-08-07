@@ -76,6 +76,31 @@ fn resolves_relative_alias_and_builtin_specifiers() {
 }
 
 #[test]
+fn resolves_aliases_through_referenced_tsconfig_paths() {
+    // The split-tsconfig fixture mirrors Vite's layout: the root `tsconfig.json`
+    // only lists project references and the `@/*` mapping lives in the referenced
+    // `tsconfig.app.json`. Resolution must follow the reference (via
+    // `TsconfigReferences::Auto`) and still land on `src/clients/index.ts`.
+    let analysis = run("split-tsconfig");
+    let main = analysis
+        .modules
+        .iter()
+        .find(|m| m.path().ends_with("main.ts"))
+        .expect("main.ts should be discovered");
+
+    assert!(
+        matches!(
+            main.resolutions.get("@/clients"),
+            Some(Resolved::Internal { path }) if path.ends_with("clients/index.ts")
+        ),
+        "expected @/clients to resolve through the referenced tsconfig to src/clients/index.ts, got {:?}",
+        main.resolutions.get("@/clients")
+    );
+
+    assert!(analysis.unresolved.is_empty(), "{:?}", analysis.unresolved);
+}
+
+#[test]
 fn records_unresolved_specifiers_without_failing() {
     let analysis = run("unresolved");
 

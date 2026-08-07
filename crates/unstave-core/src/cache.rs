@@ -7,7 +7,7 @@ use std::time::Instant;
 use rayon::prelude::*;
 use xxhash_rust::xxh3::{xxh3_64, Xxh3};
 
-use crate::config::Config;
+use crate::config::{Config, ALWAYS_EXCLUDE_DIRS};
 use crate::discovery::{discover, Workspace};
 use crate::pipeline::{analyze_discovered, Analysis, Module, Timings};
 use crate::resolve::UnresolvedSpecifier;
@@ -136,7 +136,45 @@ fn configuration_inputs(workspace: &Workspace) -> BTreeSet<PathBuf> {
     ] {
         paths.insert(workspace.root.join(name));
     }
+    // Every tsconfig/jsconfig under the workspace root is a resolution input:
+    // the resolver reads referenced configs too, so editing e.g.
+    // `tsconfig.app.json` must invalidate the cached analysis even though that
+    // file is not a source module and is not the package's own tsconfig.
+    // These files are tiny, so walk for all of them.
+    paths.extend(tsconfig_inputs(&workspace.root));
     paths
+}
+
+/// Every `tsconfig*.json` / `jsconfig*.json` file beneath `root`, in a
+/// deterministic order. Build/dependency directories are skipped, mirroring
+/// discovery's walk.
+fn tsconfig_inputs(root: &Path) -> Vec<PathBuf> {
+    let mut found = Vec::new();
+    let mut stack = vec![root.to_path_buf()];
+    while let Some(dir) = stack.pop() {
+        let Ok(entries) = std::fs::read_dir(&dir) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                let name = path.file_name().and_then(|name| name.to_str());
+                if !name.is_some_and(|name| ALWAYS_EXCLUDE_DIRS.contains(&name)) {
+                    stack.push(path);
+                }
+            } else {
+                let name = path.file_name().and_then(|name| name.to_str());
+                if name.is_some_and(|name| {
+                    (name.starts_with("tsconfig") || name.starts_with("jsconfig"))
+                        && name.ends_with(".json")
+                }) {
+                    found.push(path);
+                }
+            }
+        }
+    }
+    found.sort();
+    found
 }
 
 fn content_hash(path: &Path) -> u64 {
@@ -171,6 +209,23 @@ mod tests {
 
     fn scratch_fixture() -> PathBuf {
         let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/simple");
+        let target = std::env::temp_dir().join(format!(
+            "unstave-cache-test-{}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("clock after epoch")
+                .as_nanos(),
+            SCRATCH_ID.fetch_add(1, Ordering::Relaxed)
+        ));
+        copy_tree(&source, &target);
+        target
+    }
+
+    fn scratch_fixture_named(name: &str) -> PathBuf {
+        let source = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../tests/fixtures")
+            .join(name);
         let target = std::env::temp_dir().join(format!(
             "unstave-cache-test-{}-{}-{}",
             std::process::id(),
@@ -234,6 +289,35 @@ mod tests {
 
         let result = analyze_cached(&root, &config).expect("recover from cache corruption");
         assert!(!result.cache_hit);
+        std::fs::remove_dir_all(root).expect("remove scratch fixture");
+    }
+
+    #[test]
+    fn editing_a_referenced_tsconfig_invalidates_the_cache() {
+        // The split-tsconfig fixture's root `tsconfig.json` has no `paths`; the
+        // `@/*` mapping lives in the referenced `tsconfig.app.json`. Editing that
+        // referenced file changes resolution output, so the cache must miss even
+        // though the package's own tsconfig path is unchanged.
+        let root = scratch_fixture_named("split-tsconfig");
+        let config = Config::default();
+
+        let cold = analyze_cached(&root, &config).expect("cold analysis");
+        assert!(!cold.cache_hit);
+
+        let warm = analyze_cached(&root, &config).expect("warm analysis");
+        assert!(warm.cache_hit);
+
+        let app_tsconfig = root.join("tsconfig.app.json");
+        let mut text = std::fs::read_to_string(&app_tsconfig).expect("read tsconfig.app.json");
+        text = text.replace("\"@/*\": [\"src/*\"]", "\"@/*\": [\"./src/*\"]");
+        std::fs::write(&app_tsconfig, text).expect("edit tsconfig.app.json");
+
+        let changed = analyze_cached(&root, &config).expect("changed analysis");
+        assert!(
+            !changed.cache_hit,
+            "editing a referenced tsconfig must invalidate the cached analysis"
+        );
+
         std::fs::remove_dir_all(root).expect("remove scratch fixture");
     }
 }
