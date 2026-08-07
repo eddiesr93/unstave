@@ -31,6 +31,10 @@ amplification and 16 excess modules at that site. A targeted codemod plan rewrot
 five imports across four files. Re-analysis removed that barrel from the imported
 barrel ranking and did not increase unresolved specifiers.
 
+After a frozen, package-filtered dependency install, Vite's official package
+build and typecheck completed successfully. The directly affected server source
+map suite also passed all 10 tests.
+
 ### TanStack Query
 
 `packages/svelte-query/src/index.ts` reached 19 modules at its most amplified
@@ -40,12 +44,23 @@ not prove. After applying the plan, the two remaining sites had 1x amplification
 and zero excess. The command used the repository's source export condition:
 `--condition @tanstack/custom-condition`.
 
+After building the filtered workspace dependencies, `svelte-check` reported zero
+errors and the package test suite passed 168 tests across 23 files, including
+Vitest's type checking. ESLint reported zero errors on every rewritten file; its
+single warning was present in an unchanged line.
+
 ### Astro
 
 `packages/astro/src/core/app/entrypoints/index.ts` reached 143 modules at its
 worst site and accumulated 574 excess modules. The targeted plan rewrote five
 imports across five source files. Re-analysis removed that barrel from the
 imported barrel ranking and did not increase unresolved specifiers.
+
+Astro's filtered dependency build completed successfully. The manifest, routing,
+and app suites closest to the rewritten modules passed 84 tests. A wider unit run
+passed 3,271 of 3,276 tests; three failures and one cancellation required fixtures
+outside the filtered install or live font downloads, and were unrelated to the
+rewritten imports.
 
 ## Reproduction
 
@@ -77,16 +92,22 @@ and `fix`.
 
 ## Validation boundaries
 
-- The repositories were shallow clones with no dependency installation. This
-  keeps the test fast and isolates source-graph analysis, but bare third-party
-  imports remain unresolved.
-- Because dependencies were absent, unresolved-specifier and dead-export totals
-  are deliberately excluded from the comparison. The barrel findings above use
-  internal source paths that resolved in both the original and rewritten trees.
+- The repositories were shallow clones. Dependencies were installed from each
+  pinned lockfile with a package filter for the affected workspace, rather than
+  building every package in these very large monorepos.
+- Unresolved-specifier and dead-export totals remain deliberately excluded from
+  the comparison. The benchmark is about internal barrel amplification, while
+  package-filtered installs do not make every fixture and workspace package
+  available to source-graph analysis.
 - Parse failures were limited to intentional syntax-error fixtures already
   present in the upstream repositories.
 - Every write test ran only inside a disposable clone. `git diff --check` passed,
-  and re-analysis showed no increase in unresolved specifiers.
+  the repositories' formatters accepted every rewritten file, and re-analysis
+  showed no increase in unresolved specifiers.
+- Vite passed its package build, typecheck, and 10 directly affected tests.
+  TanStack Query passed 168 package tests and type checking. Astro passed its
+  filtered dependency build and 84 targeted tests; the wider run's three
+  environment-dependent failures are disclosed above rather than hidden.
 - The live-project run exposed a NodeNext style gap in the codemod. Commit
   [`0128133`](https://github.com/eddiesr93/unstave/commit/0128133) added a
   regression fixture and now preserves explicit `.js`, `.mjs`, and `.cjs`
