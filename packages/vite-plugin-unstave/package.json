@@ -2,9 +2,25 @@
   "name": "@unstave/vite-plugin",
   "version": "0.2.0",
   "description": "Non-blocking unstave module-graph reports for Vite",
+  "keywords": [
+    "vite",
+    "vite-plugin",
+    "typescript",
+    "module-graph",
+    "dependency-graph",
+    "barrel-files",
+    "codemod",
+    "monorepo",
+    "static-analysis",
+    "build-performance"
+  ],
   "type": "module",
   "license": "MIT",
   "repository": "github:eddiesr93/unstave",
+  "homepage": "https://eddiesr93.github.io/unstave/",
+  "bugs": {
+    "url": "https://github.com/eddiesr93/unstave/issues"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,7 +28,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "publishConfig": {
     "access": "public",

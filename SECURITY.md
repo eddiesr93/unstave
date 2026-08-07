@@ -1,50 +1,42 @@
-# Security Policy
-
-## Reporting a vulnerability
-
-Please **do not** file a public issue for a security vulnerability. Instead,
-report it privately so it can be addressed before disclosure.
-
-The best way to reach the maintainers is through GitHub's private vulnerability
-reporting on this repository:
-
-- [https://github.com/eddiesr93/unstave/security/advisories/new](https://github.com/eddiesr93/unstave/security/advisories/new)
-
-Alternatively, email the maintainers and include as much detail as possible:
-
-- A description of the vulnerability and its impact.
-- Steps to reproduce (or a minimal proof of concept).
-- Affected versions and components.
-- Any suggested fix, if known.
-
-You should receive an acknowledgement, and we will work with you to understand
-and address the issue. Please allow time for a fix to be prepared and released
-before public disclosure.
-
-## Scope
-
-The following components are in scope for security reports:
-
-- The Rust analysis core (`unstave-core`) and renderers (`unstave-report`).
-- The codemod (`unstave-codemod`).
-- The Node-API native binding (`unstave-napi` / `@unstave/node`).
-- The Vite plugin (`@unstave/vite-plugin`).
-- The release pipeline and distribution artifacts, including the Homebrew
-  formula (`Formula/unstave.rb`).
-
-Out of scope are third-party dependencies themselves; report issues in
-upstream projects to their maintainers. A vulnerability that is the direct
-result of a third-party dependency may still be reported here so we can track
-and update the affected version.
+# Security policy
 
 ## Supported versions
 
-This project is **pre-1.0**. Only the latest released version is actively
-supported with security fixes. When a vulnerability is fixed, the fix is
-released in the next version and backported to older releases only when
-feasible and practical.
+unstave is pre-1.0. Security fixes are made for the latest published release and
+backported only when feasible. Upgrade to the most recent version before reporting
+or validating a vulnerability.
 
 | Version | Supported |
 | --- | --- |
-| latest | ✅ |
-| older (pre-1.0) | ❌ |
+| Latest release | Yes |
+| Older pre-1.0 releases | No |
+
+## Reporting a vulnerability
+
+Please report suspected vulnerabilities through
+[GitHub private vulnerability reporting](https://github.com/eddiesr93/unstave/security/advisories/new).
+Do not open a public issue or discussion, and do not include credentials,
+proprietary source code, or other sensitive material in a report.
+
+Include the affected version and surface, a minimal proof of concept, the expected
+impact, and any mitigations you have already identified. Reports should contain
+enough detail to reproduce the behavior without access to a private repository.
+
+The project aims to acknowledge reports within 72 hours and provide an initial
+assessment within seven days. These are response targets rather than guarantees.
+Validated issues will be coordinated privately until a fix and release notes are
+ready.
+
+## Scope
+
+The following components are in scope:
+
+- The Rust analysis core and report renderers.
+- The codemod.
+- The Node-API native binding and `@unstave/node`.
+- `@unstave/vite-plugin`.
+- Release automation and distribution artifacts, including the Homebrew formula.
+
+Report vulnerabilities in third-party dependencies to their maintainers. You may
+also report a dependency vulnerability here when unstave is directly affected so
+the project can track and update the dependency.

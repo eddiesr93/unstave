@@ -2,13 +2,30 @@
   "name": "@unstave/node",
   "version": "0.2.0",
   "description": "Native module-graph analysis for TypeScript and React workspaces",
+  "keywords": [
+    "typescript",
+    "module-graph",
+    "dependency-graph",
+    "barrel-files",
+    "codemod",
+    "monorepo",
+    "static-analysis",
+    "build-performance",
+    "rust",
+    "napi-rs"
+  ],
   "license": "MIT",
   "repository": "github:eddiesr93/unstave",
+  "homepage": "https://eddiesr93.github.io/unstave/",
+  "bugs": {
+    "url": "https://github.com/eddiesr93/unstave/issues"
+  },
   "main": "index.js",
   "types": "index.d.ts",
   "files": [
     "index.js",
-    "index.d.ts"
+    "index.d.ts",
+    "README.md"
   ],
   "engines": {
     "node": ">=20.19"

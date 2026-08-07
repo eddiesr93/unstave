@@ -9,8 +9,6 @@
 **Your `index.ts` barrel files are why your dev server takes 20 seconds to start.
 `unstave` proves it, then fixes it.**
 
-> ⭐ **If unstave saved you a slow dev server, give it a ⭐ — it helps others find it.**
-
 [Product site](https://eddiesr93.github.io/unstave/) · [Documentation](https://eddiesr93.github.io/unstave/docs/) · [Installation](#install) · [Usage](#usage) · [Changelog](CHANGELOG.md) · [crates.io](https://crates.io/crates/unstave-cli) · [npm](https://www.npmjs.com/package/@unstave/node)
 
 One innocent-looking import:
@@ -57,6 +55,10 @@ Your own numbers depend entirely on how your barrels are shaped — run
 > fix for bare barrel imports cut `src/core/config/index.ts` from **167 reported
 > excess to 65**, and `dev-toolbar/ui-library/index.ts` from **13 to 0**
 > ([changelog](CHANGELOG.md)).
+
+If unstave surfaces a real bottleneck in your project,
+[star the repository](https://github.com/eddiesr93/unstave) so other TypeScript
+teams can find it.
 
 ## Why this happens
 

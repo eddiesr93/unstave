@@ -1,0 +1,65 @@
+name: Feature request
+description: Propose an improvement grounded in a real module-graph workflow
+title: "feature: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Strong proposals start with the problem and an example project shape, not only a preferred implementation.
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Product area
+      options:
+        - CLI
+        - Core analysis
+        - HTML, JSON, or terminal report
+        - Codemod
+        - Node API
+        - Vite plugin
+        - Documentation
+        - Release or installation
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is difficult today, and who encounters it?
+    validations:
+      required: true
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: Describe the behavior or result you want to achieve.
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: Add a command, configuration, module layout, or proposed output that makes the request concrete.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What workarounds or related tools have you tried?
+
+  - type: dropdown
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - I can open a pull request with guidance
+        - I can help validate an implementation
+        - I am reporting the need only
+    validations:
+      required: true

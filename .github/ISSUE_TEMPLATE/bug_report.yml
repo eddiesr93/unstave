@@ -1,0 +1,85 @@
+name: Bug report
+description: Report a reproducible problem in unstave
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve unstave. Please remove private source code, tokens, and credentials from all output.
+
+  - type: input
+    id: version
+    attributes:
+      label: unstave version
+      description: Run `unstave --version`, or provide the npm package version.
+      placeholder: "0.2.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Affected surface
+      options:
+        - CLI
+        - Core analysis
+        - HTML, JSON, or terminal report
+        - Codemod
+        - Node API
+        - Vite plugin
+        - Installation or release artifact
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include your operating system, architecture, Node.js version, and package manager where relevant.
+      placeholder: macOS 15, arm64, Node.js 24, pnpm 10
+    validations:
+      required: true
+
+  - type: textarea
+    id: command
+    attributes:
+      label: Command or configuration
+      description: Show the exact command and the smallest relevant configuration.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Link a small repository or describe the minimal file graph needed to reproduce the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include sanitized logs or report output. Use `-v` or `-vv` when additional diagnostics are useful.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched existing issues for the same problem.
+          required: true
+        - label: I removed credentials, proprietary source code, and other sensitive data.
+          required: true
