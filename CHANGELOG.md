@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-08-07
+
+### Added
+
+- Publish the `unstave` CLI on npm as `@unstave/cli`, so the flagship command
+  runs with no Rust toolchain: `npx @unstave/cli analyze`. Prebuilt binaries
+  ship for macOS (arm64/x64), Linux (glibc and musl, arm64/x64), and Windows
+  (x64); the loader resolves and spawns the native binary for the host and
+  falls back to `cargo install` with a clear message otherwise.
+- Cross-compile the standalone CLI binary in the release pipeline and publish
+  the platform binary packages with npm provenance.
+
 ## [0.2.1] - 2026-08-07
 
 ### Fixed
@@ -116,7 +128,8 @@ Initial public release of the analyzers, CLI, NAPI bindings, and Vite plugin.
 - Fix the HTML report on large graphs, the entrypoint projection, and the
   warm-run cost.
 
-[Unreleased]: https://github.com/eddiesr93/unstave/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/eddiesr93/unstave/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/eddiesr93/unstave/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/eddiesr93/unstave/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/eddiesr93/unstave/compare/v0.1.5...v0.2.0
 [0.1.5]: https://github.com/eddiesr93/unstave/compare/v0.1.4...v0.1.5

@@ -1,6 +1,6 @@
 {
   "name": "@unstave/cli",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "unstave CLI: measure and remove TypeScript barrel-file bloat — no Rust install required",
   "keywords": [
     "typescript",
