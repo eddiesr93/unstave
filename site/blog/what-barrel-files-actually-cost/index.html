@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#181b13">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="description" content="One import in Astro reaches 143 modules. Measured barrel amplification in Vite, TanStack Query, and Astro at pinned commits, with every rewrite verified by each project's own build, typecheck, and test suite.">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="What barrel files actually cost, measured on Vite, TanStack Query, and Astro">
+  <meta property="og:description" content="One import in Astro reaches 143 modules where it needs one. Here is the measurement, the rewrite, and where the numbers stop applying.">
+  <meta property="og:url" content="https://eddiesr93.github.io/unstave/blog/what-barrel-files-actually-cost/">
+  <meta property="og:image" content="https://eddiesr93.github.io/unstave/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="unstave: see what one import drags into a TypeScript module graph">
+  <meta property="article:published_time" content="2026-08-07">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="What barrel files actually cost">
+  <meta name="twitter:description" content="One import in Astro reaches 143 modules where it needs one. Measured on pinned commits, rewrites verified upstream.">
+  <meta name="twitter:image" content="https://eddiesr93.github.io/unstave/og-image.png">
+  <link rel="canonical" href="https://eddiesr93.github.io/unstave/blog/what-barrel-files-actually-cost/">
+  <link rel="sitemap" type="application/xml" href="https://eddiesr93.github.io/unstave/sitemap.xml">
+  <link rel="icon" href="../../favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,600;0,700;1,400&amp;family=League+Gothic&amp;display=swap" rel="stylesheet">
+  <script>document.documentElement.classList.add('js')</script>
+  <link rel="stylesheet" href="../../styles.css">
+  <title>What barrel files actually cost - unstave</title>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": "What barrel files actually cost, measured on Vite, TanStack Query, and Astro",
+      "description": "Measured barrel amplification in three pinned public TypeScript repositories, with every rewrite verified by each project's own build, typecheck, and test suite.",
+      "url": "https://eddiesr93.github.io/unstave/blog/what-barrel-files-actually-cost/",
+      "datePublished": "2026-08-07",
+      "dateModified": "2026-08-07",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "unstave",
+        "url": "https://eddiesr93.github.io/unstave/"
+      },
+      "about": {
+        "@type": "SoftwareApplication",
+        "name": "unstave",
+        "applicationCategory": "DeveloperApplication",
+        "softwareVersion": "0.2.1"
+      }
+    }
+  </script>
+</head>
+<body class="docs-page">
+  <a class="skip-link" href="#main">Skip to article</a>
+
+  <header class="site-header">
+    <a class="wordmark" href="../../" aria-label="unstave product overview">
+      <span>UN</span><i aria-hidden="true"></i><span>STAVE</span>
+    </a>
+    <nav aria-label="Primary navigation">
+      <a href="../../">Overview</a>
+      <a href="../../docs/">Docs</a>
+      <a href="#try-it">Install</a>
+    </nav>
+    <a class="header-github" href="https://github.com/eddiesr93/unstave">Star on GitHub</a>
+  </header>
+
+  <main class="docs-shell" id="main">
+    <aside class="docs-sidebar" aria-label="Article navigation">
+      <div class="docs-sidebar-inner">
+        <p class="docs-version"><span>Article</span><strong>2026-08-07</strong></p>
+        <a class="docs-back" href="../../">Product overview</a>
+        <nav class="docs-nav docs-nav-desktop" aria-label="Article sections">
+          <a href="#intro" class="is-active" data-doc-link><span>01</span>The invisible cost</a>
+          <a href="#instrument" data-doc-link><span>02</span>The instrument</a>
+          <a href="#repositories" data-doc-link><span>03</span>Three repositories</a>
+          <a href="#rewrites" data-doc-link><span>04</span>What the rewrites did</a>
+          <a href="#limits" data-doc-link><span>05</span>What this does not prove</a>
+          <a href="#bug" data-doc-link><span>06</span>The bug real code found</a>
+          <a href="#try-it" data-doc-link><span>07</span>Try it yourself</a>
+        </nav>
+      </div>
+    </aside>
+
+    <article class="docs-content">
+      <section class="docs-section docs-intro" id="intro" aria-labelledby="intro-title" data-doc-section>
+        <p class="section-kicker">Article / 2026-08-07</p>
+        <h1 id="intro-title">One import reached <em>143 modules.</em></h1>
+        <p class="docs-lede">Barrel files are the most widely accepted performance mistake in TypeScript. Here is what they cost in three pinned public repositories, what happened when a codemod removed that cost, and exactly where the numbers stop applying.</p>
+
+        <details class="docs-mobile-nav">
+          <summary>On this page</summary>
+          <nav class="docs-nav" aria-label="Mobile article sections">
+            <a href="#intro"><span>01</span>The invisible cost</a>
+            <a href="#instrument"><span>02</span>The instrument</a>
+            <a href="#repositories"><span>03</span>Three repositories</a>
+            <a href="#rewrites"><span>04</span>What the rewrites did</a>
+            <a href="#limits"><span>05</span>What this does not prove</a>
+            <a href="#bug"><span>06</span>The bug real code found</a>
+            <a href="#try-it"><span>07</span>Try it yourself</a>
+          </nav>
+        </details>
+
+        <p>Every TypeScript codebase of a certain age has them. A directory grows past a handful of files, someone adds an <code>index.ts</code> that re-exports everything in it, and from then on the rest of the codebase imports from the directory instead of from the file.</p>
+
+        <div class="docs-code">
+          <div class="docs-code-meta"><span>Looks like one module</span></div>
+          <pre><code>import { Client0 } from '@/clients'</code></pre>
+        </div>
+
+        <p>A barrel is a single graph node that depends on everything behind it. Ask it for one symbol and you get the whole directory, plus whatever the modules behind it pull in from their own barrels.</p>
+
+        <p>Your production bundler tree-shakes this away, so the shipped output is fine. That is exactly why the problem survives for years: it is invisible in the metrics teams actually watch. Where it is not invisible is in the tools that do not tree-shake. A dev server resolves and transforms the graph eagerly. A type checker walks all of it. Both pay for every module the barrel dragged in, on every cold start.</p>
+
+        <p>The interesting question is not whether that is true in principle. It is how much it costs in real, well-maintained repositories, and whether a tool can remove that cost without breaking the code.</p>
+      </section>
+
+      <section class="docs-section" id="instrument" aria-labelledby="instrument-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">02 / The instrument</p>
+          <h2 id="instrument-title">Measure first. Rewrite second.</h2>
+          <p>unstave is a Rust CLI built on <a class="text-link" href="https://oxc.rs">oxc</a>. It builds the module graph of a TypeScript workspace, then answers one question per import site: how many modules does this import reach, and how many would it reach pointing directly at the module that declares the symbol?</p>
+        </div>
+
+        <p>The ratio is amplification. The difference is excess: modules pulled in for no reason.</p>
+
+        <div class="docs-code">
+          <div class="docs-code-meta"><span>unstave barrels</span></div>
+          <pre><code>Barrel amplification
+┌──────────────────────┬───────┬──────┬─────────┬───────┬────────┬────────────┐
+│ barrel               ┆ sites ┆ cost ┆ excess  ┆ worst ┆ amp    ┆ rewritable │
+╞══════════════════════╪═══════╪══════╪═════════╪═══════╪════════╪════════════╡
+│ src/clients/index.ts ┆ 4920  ┆ 1047 ┆ 5136480 ┆ 1044  ┆ 349.0× ┆ 4920/4920  │
+└──────────────────────┴───────┴──────┴─────────┴───────┴────────┴────────────┘</code></pre>
+        </div>
+
+        <div class="docs-callout">
+          <strong>What it is not</strong>
+          <p>Not a bundler and not a linter. It runs no <code>tsc</code>, does no type inference, and says nothing about bundle size. It measures one thing and rewrites one thing.</p>
+        </div>
+
+        <p>The rewriting is where a tool like this earns or loses trust, so it is deliberately timid. <code>unstave fix</code> dry-runs by default and prints a unified diff. It touches only the bytes inside the import statements it rewrites: no reformatting, no reordering, no reflowing the rest of the file. Imports it cannot resolve unambiguously, namespace imports, cyclic or external re-exports, and barrels with observed side effects are left byte-identical and reported with a reason.</p>
+      </section>
+
+      <section class="docs-section" id="repositories" aria-labelledby="repositories-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">03 / Three repositories</p>
+          <h2 id="repositories-title">Pinned commits, not fixtures.</h2>
+          <p>Synthetic benchmarks prove a tool is fast. They do not prove it is right about code other people wrote. So this ran against pinned commits of three large, actively maintained public projects that were not written to make the tool look good.</p>
+        </div>
+
+        <div class="docs-table-wrap">
+          <table class="docs-table evidence-table">
+            <thead><tr><th>Project</th><th>Graph</th><th>Median</th><th>Strongest targeted barrel</th><th>Safe rewrite</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><a href="https://github.com/vitejs/vite/commit/57fea001d154e7dd8d5d74d3082731f1dcfd31be">Vite <code>57fea00</code></a></td>
+                <td>1,546 modules<span class="evidence-secondary">20.9 MiB peak RSS</span></td>
+                <td>68 ms miss<span class="evidence-secondary">38 ms hit</span></td>
+                <td>5x peak<span class="evidence-secondary">18 total excess</span></td>
+                <td>4 files<span class="evidence-secondary">5 imports</span></td>
+              </tr>
+              <tr>
+                <td><a href="https://github.com/TanStack/query/commit/46d7f02f1c7b9fcd3255082cc7103e8bfa3dab76">TanStack Query <code>46d7f02</code></a></td>
+                <td>1,081 modules<span class="evidence-secondary">21.0 MiB peak RSS</span></td>
+                <td>41 ms miss<span class="evidence-secondary">26 ms hit</span></td>
+                <td>19x peak<span class="evidence-secondary">189 total excess</span></td>
+                <td>14 files<span class="evidence-secondary">14 imports</span></td>
+              </tr>
+              <tr>
+                <td><a href="https://github.com/withastro/astro/commit/fba468c228d8661d2383a80c74206075201a187b">Astro <code>fba468c</code></a></td>
+                <td>2,858 modules<span class="evidence-secondary">44.7 MiB peak RSS</span></td>
+                <td>154 ms miss<span class="evidence-secondary">93 ms hit</span></td>
+                <td>143x peak<span class="evidence-secondary">574 total excess</span></td>
+                <td>5 files<span class="evidence-secondary">5 imports</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>Measured on an Apple M4 Pro, 14 cores, 24 GB RAM, macOS 26.5.2. Timings are median internal totals across three consecutive pairs. A cache miss means the on-disk cache was deleted first; it does not mean the operating-system page cache was flushed.</p>
+
+        <p>Two things stand out. Whole-workspace analysis of a 2,858-module monorepo takes 93 ms warm in under 45 MiB, which is fast enough to run on every save rather than in a nightly job. And Astro's worst site reaches <strong>143 modules for a single import</strong>, in a real framework, from a barrel doing exactly what barrels are supposed to do.</p>
+      </section>
+
+      <section class="docs-section" id="rewrites" aria-labelledby="rewrites-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">04 / What the rewrites did</p>
+          <h2 id="rewrites-title">Verified by each project's own tools.</h2>
+          <p>Finding a number is easy. The load-bearing claim is that the rewrite is safe, and that has to be checked by each project's toolchain rather than by the tool's own assertion that everything went fine.</p>
+        </div>
+
+        <div class="docs-subsection">
+          <h3>Vite</h3>
+          <p>One import of <code>ESModulesEvaluator</code> reached 20 modules where the direct definition path needs four: 5x amplification, 16 excess at that site. The plan rewrote five imports across four files. After a frozen, package-filtered install, Vite's own package build and typecheck completed, and the directly affected server source map suite passed all 10 tests. Re-analysis dropped the barrel out of the ranking and did not increase unresolved specifiers.</p>
+        </div>
+
+        <div class="docs-subsection">
+          <h3>TanStack Query</h3>
+          <p>The Svelte Query barrel reached 19 modules at its worst site and accumulated 189 excess across all sites. The plan rewrote 14 imports in 14 test files and skipped four symbols it could not prove; the skips matter as much as the rewrites. Afterwards the two remaining sites sat at 1x amplification and zero excess. <code>svelte-check</code> reported zero errors, the package suite passed 168 tests across 23 files including Vitest type checking, and ESLint reported zero errors on every rewritten file.</p>
+          <p>This one needed a flag: <code>--condition @tanstack/custom-condition</code>. Monorepos frequently point their <code>exports</code> maps at build output, so a source-graph tool that does not know the project's source condition fails to resolve cross-package imports and understates every number behind them. A suspicious pile of unresolved specifiers is almost always this.</p>
+        </div>
+
+        <div class="docs-subsection">
+          <h3>Astro</h3>
+          <p>The 143x barrel. Five imports rewritten across five source files, the filtered dependency build completed, and the 84 tests closest to the rewritten modules passed. A wider unit run passed 3,271 of 3,276; three failures and one cancellation needed fixtures outside the filtered install or live font downloads, and were unrelated to the rewrites. Those are disclosed in the methodology rather than dropped from the summary.</p>
+        </div>
+      </section>
+
+      <section class="docs-section" id="limits" aria-labelledby="limits-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">05 / What this does not prove</p>
+          <h2 id="limits-title">Being precise about the boundary.</h2>
+          <p>Publishing numbers is only worth doing if the limits come with them.</p>
+        </div>
+
+        <div class="docs-callout">
+          <strong>Source-graph savings, not build-time savings</strong>
+          <p>Removing 574 excess modules from a barrel's import sites shrinks the graph a dev server and type checker traverse. It does not mean a build got proportionally faster. Nothing here measured application startup or production build duration, and any claim of that kind would need a different experiment.</p>
+        </div>
+
+        <p><strong>The clones were filtered.</strong> Dependencies came from each pinned lockfile with a package filter for the affected workspace, rather than building every package in very large monorepos. That is also why unresolved-specifier and dead-export totals are excluded from the comparison: a filtered install cannot make every fixture and workspace package available.</p>
+
+        <p><strong>Your numbers depend entirely on how your barrels are shaped.</strong> The synthetic workspace in the repository shows a 349x barrel because it was built to. Vite showed 5x. Same tool, same analysis, two orders of magnitude apart. There is no useful average here, only what your own graph looks like.</p>
+
+        <p>Every write test ran inside a disposable clone. <code>git diff --check</code> passed, each repository's own formatter accepted every rewritten file, and re-analysis showed no increase in unresolved specifiers.</p>
+      </section>
+
+      <section class="docs-section" id="bug" aria-labelledby="bug-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">06 / The bug real code found</p>
+          <h2 id="bug-title">Foreign code finds what fixtures miss.</h2>
+          <p>Running against real repositories surfaced something the test suite did not. Astro and TanStack Query use NodeNext-style imports with explicit runtime extensions.</p>
+        </div>
+
+        <div class="docs-code">
+          <div class="docs-code-meta"><span>A specifier the codemod must not touch</span></div>
+          <pre><code>import { thing } from './thing.js'</code></pre>
+        </div>
+
+        <p>The codemod was rewriting the specifier to the source file it resolved to, producing imports that typechecked but would not run. It also normalized semicolons, so a semicolon-free codebase got a diff its formatter immediately disagreed with. Small, but exactly the kind of noise that makes a team stop trusting a codemod.</p>
+
+        <p>A regression fixture landed alongside the fix, and explicit <code>.js</code>, <code>.mjs</code>, and <code>.cjs</code> specifiers plus the source file's semicolon convention are now preserved. That fix is the most valuable thing to come out of this validation, and a good argument for running any codemod against foreign code before believing it.</p>
+
+        <div class="docs-callout">
+          <strong>Reproduce all of it</strong>
+          <p>Full methodology, pinned commit hashes, boundaries, and before/after results are published alongside the source.</p>
+          <a class="text-link" href="https://github.com/eddiesr93/unstave/blob/main/docs/real-world-validation.md">Open methodology and findings</a>
+        </div>
+      </section>
+
+      <section class="docs-section" id="try-it" aria-labelledby="try-it-title" data-doc-section>
+        <div class="docs-section-heading">
+          <p class="section-kicker">07 / Try it yourself</p>
+          <h2 id="try-it-title">One command, nothing written.</h2>
+          <p>The first step writes nothing and tells you whether you have a problem worth acting on.</p>
+        </div>
+
+        <div class="docs-code">
+          <div class="docs-code-meta"><span>Install the CLI</span><button class="docs-copy" type="button" data-copy-target="article-install">Copy</button></div>
+          <pre><code id="article-install">cargo install unstave-cli
+
+brew tap eddiesr93/unstave https://github.com/eddiesr93/unstave
+brew install unstave</code></pre>
+        </div>
+
+        <div class="docs-code">
+          <div class="docs-code-meta"><span>Then, from your workspace root</span><button class="docs-copy" type="button" data-copy-target="article-first-run">Copy</button></div>
+          <pre><code id="article-first-run">unstave barrels</code></pre>
+        </div>
+
+        <p>If the ranking shows something real, <code>unstave analyze --format html</code> produces a single portable report with no CDN or network dependency, and <code>unstave fix</code> shows you the diff before it touches anything. There is also a Vite plugin that runs the analysis asynchronously, so startup and HMR never wait on it, and serves the live report at <code>/__unstave</code> in development.</p>
+
+        <div class="docs-code">
+          <div class="docs-code-meta"><span>Vite plugin</span><button class="docs-copy" type="button" data-copy-target="article-vite">Copy</button></div>
+          <pre><code id="article-vite">npm install --save-dev @unstave/vite-plugin</code></pre>
+        </div>
+
+        <p>unstave is MIT-licensed and early: v0.2.1, with interfaces that may still change before 1.0. If you run it and find something real, or something wrong, the discussions are the right place for it. Module count, top barrel, amplification, and what you changed is the most useful shape for a report.</p>
+
+        <div class="docs-callout">
+          <strong>See a live report first</strong>
+          <p>Real output from the CLI, generated against a nested-barrel fixture, with no install required.</p>
+          <a class="text-link" href="../../sample-report.html">Open the sample report</a>
+        </div>
+
+        <div class="hero-actions">
+          <a class="button button-primary" href="https://github.com/eddiesr93/unstave">Star on GitHub</a>
+          <a class="button button-quiet" href="../../docs/">Read the docs</a>
+        </div>
+      </section>
+    </article>
+  </main>
+
+  <footer class="docs-footer">
+    <a class="wordmark footer-wordmark" href="#intro" aria-label="Back to the top of the article">
+      <span>UN</span><i aria-hidden="true"></i><span>STAVE</span>
+    </a>
+    <p>Module graph / disassembled.<br>MIT licensed. Built in Rust.</p>
+    <div class="footer-links">
+      <a href="../../">Overview</a>
+      <a href="../../docs/">Docs</a>
+      <a href="https://github.com/eddiesr93/unstave">Star on GitHub</a>
+    </div>
+    <p class="footer-mark">Measure.<br>Prove.<br>Rewrite.</p>
+  </footer>
+
+  <div class="copy-toast" role="status" aria-live="polite">Command copied</div>
+  <script src="../../docs/docs.js" defer></script>
+</body>
+</html>

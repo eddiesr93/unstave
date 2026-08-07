@@ -301,8 +301,8 @@
       <div class="validation-copy reveal">
         <p class="section-kicker">Validated on a real codebase</p>
         <h2 id="validation-title">False positives do not earn rewrites.</h2>
-        <p>unstave was tested against the real <a href="https://github.com/withastro/astro">withastro/astro</a> module graph. A bare-import edge case found there became the v0.2.0 schema and analysis fix.</p>
-        <a class="text-link" href="https://github.com/eddiesr93/unstave/releases/tag/v0.2.0">Read the validation notes</a>
+        <p>unstave was run against pinned commits of <a href="https://github.com/vitejs/vite">Vite</a>, <a href="https://github.com/TanStack/query">TanStack Query</a>, and <a href="https://github.com/withastro/astro">Astro</a>. One Astro import reached 143 modules. Every rewrite was then verified by each project's own build, typecheck, and tests.</p>
+        <a class="text-link" href="./blog/what-barrel-files-actually-cost/">Read what barrel files actually cost</a>
       </div>
       <div class="validation-proof reveal" aria-label="Corrected excess module findings in the Astro repository">
         <div class="proof-heading"><span>Repository</span><strong>withastro/astro</strong></div>
