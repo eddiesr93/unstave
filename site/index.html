@@ -10,7 +10,13 @@
   <meta property="og:description" content="See what one import drags in. Then cut it loose.">
   <meta property="og:url" content="https://eddiesr93.github.io/unstave/">
   <meta property="og:image" content="https://eddiesr93.github.io/unstave/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="unstave: see what one import drags into a TypeScript module graph">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="unstave - module graph / disassembled">
+  <meta name="twitter:description" content="See what one import drags in. Then cut it loose.">
+  <meta name="twitter:image" content="https://eddiesr93.github.io/unstave/og-image.png">
   <link rel="canonical" href="https://eddiesr93.github.io/unstave/">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -45,7 +51,7 @@
       <a href="./docs/">Docs</a>
       <a href="#install">Install</a>
     </nav>
-    <a class="header-github" href="https://github.com/eddiesr93/unstave">GitHub</a>
+    <a class="header-github" href="https://github.com/eddiesr93/unstave">Star on GitHub</a>
   </header>
 
   <main id="main">
@@ -266,9 +272,33 @@
       <div class="benchmark-terminal reveal">
         <div><span>$</span> cargo bench -p unstave-core --bench pipeline</div>
         <p>generating <strong>6,000</strong> TypeScript modules…</p>
-        <p class="bench-result"><span>cold</span><strong>182.3 ms</strong><i style="--p: 100%"></i></p>
-        <p class="bench-result"><span>warm</span><strong>90.4 ms</strong><i style="--p: 49.6%"></i></p>
-        <p class="bench-foot">checked content-addressed cache / release profile</p>
+        <p class="bench-result"><span>cold</span><strong>234.0 ms</strong><i style="--p: 100%"></i></p>
+        <p class="bench-result"><span>warm</span><strong>117.4 ms</strong><i style="--p: 50.2%"></i></p>
+        <p class="bench-foot">median of 3 / cache verified / release profile</p>
+        <a class="benchmark-source" href="https://github.com/eddiesr93/unstave/blob/main/docs/benchmarks.md">Method, machine, and budgets</a>
+      </div>
+    </section>
+
+    <section class="validation" aria-labelledby="validation-title">
+      <div class="validation-copy reveal">
+        <p class="section-kicker">Validated on a real codebase</p>
+        <h2 id="validation-title">False positives do not earn rewrites.</h2>
+        <p>unstave was tested against the real <a href="https://github.com/withastro/astro">withastro/astro</a> module graph. A bare-import edge case found there became the v0.2.0 schema and analysis fix.</p>
+        <a class="text-link" href="https://github.com/eddiesr93/unstave/releases/tag/v0.2.0">Read the validation notes</a>
+      </div>
+      <div class="validation-proof reveal" aria-label="Corrected excess module findings in the Astro repository">
+        <div class="proof-heading"><span>Repository</span><strong>withastro/astro</strong></div>
+        <dl>
+          <div>
+            <dt>src/core/config/index.ts</dt>
+            <dd><s>167</s><span aria-hidden="true">→</span><strong>65</strong><small>reported excess</small></dd>
+          </div>
+          <div>
+            <dt>dev-toolbar/ui-library/index.ts</dt>
+            <dd><s>13</s><span aria-hidden="true">→</span><strong>0</strong><small>false positive removed</small></dd>
+          </div>
+        </dl>
+        <p>Observed during development. No customer code or synthetic claim.</p>
       </div>
     </section>
 
@@ -294,6 +324,20 @@
       </div>
     </section>
 
+    <section class="repository-cta reveal" aria-labelledby="repository-cta-title">
+      <div>
+        <p class="section-kicker">Open source / MIT</p>
+        <h2 id="repository-cta-title">Put your graph on the table.</h2>
+      </div>
+      <div class="repository-cta-copy">
+        <p>Run unstave on a real TypeScript workspace. If it surfaces a bottleneck worth fixing, star the repository so the next team can find the instrument.</p>
+        <div class="repository-cta-actions">
+          <a class="button repository-star" href="https://github.com/eddiesr93/unstave">Star unstave on GitHub</a>
+          <a class="repository-docs" href="./docs/">Read the documentation</a>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <footer>
@@ -302,7 +346,7 @@
     </a>
     <p>Module graph / disassembled.<br>MIT licensed. Built in Rust.</p>
     <div class="footer-links">
-      <a href="https://github.com/eddiesr93/unstave">GitHub</a>
+      <a href="https://github.com/eddiesr93/unstave">Star on GitHub</a>
       <a href="./docs/">Documentation</a>
       <a href="https://github.com/eddiesr93/unstave/blob/main/LICENSE">License</a>
     </div>

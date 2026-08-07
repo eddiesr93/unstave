@@ -41,8 +41,8 @@ Then `unstave fix --write` rewrites those imports to point at the modules that
 actually declare the symbols — **without reformatting a single byte** outside the
 import statements it touches.
 
-Analysing 6000 files takes **~150 ms** warm, **~250 ms** on a cold page cache
-(Apple M4 Pro, 14 cores, no persistent cache).
+Analysing 6000 files takes **117.4 ms** warm and **234.0 ms** on a cold page cache
+(median of three runs on an Apple M4 Pro, 14 cores).
 
 <sub>Numbers above are from the reproducible benchmark workspace included in this
 repo, not from a customer codebase. Generate it yourself and check the arithmetic:
