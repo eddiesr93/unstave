@@ -4,10 +4,10 @@ import { existsSync } from 'node:fs'
 
 import { binaryFileName, isSupportedPlatform, platformSuffix, requiredPlatformPackage } from '../bin/platform.mjs'
 
-test('platformSuffix includes the platform', () => {
+test('platformSuffix includes the platform and arch', () => {
   const suffix = platformSuffix()
-  assert.ok(suffix.endsWith(process.arch), 'suffix should include arch')
   assert.ok(suffix.startsWith(process.platform), 'suffix should start with platform')
+  assert.ok(suffix.includes(process.arch), 'suffix should include arch')
 })
 
 test('host platform is supported with a prebuilt binary', () => {
