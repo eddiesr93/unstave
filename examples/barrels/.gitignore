@@ -1,0 +1,2 @@
+# unstave writes its content-addressed analysis cache here.
+.unstave/
