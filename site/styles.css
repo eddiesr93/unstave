@@ -1228,6 +1228,75 @@ footer p {
   text-transform: uppercase;
 }
 
+/* Not found */
+
+.not-found-page {
+  display: grid;
+  min-height: 100svh;
+  align-items: center;
+}
+
+.not-found {
+  position: relative;
+  display: grid;
+  gap: var(--space-2xl);
+  padding-block: var(--space-3xl);
+}
+
+.not-found .wordmark {
+  position: relative;
+  z-index: 1;
+  grid-area: auto;
+}
+
+.not-found-code {
+  color: var(--ink-raised);
+  font-family: var(--font-display);
+  font-size: clamp(14rem, 66vw, 48rem);
+  letter-spacing: -0.04em;
+  line-height: 0.62;
+  user-select: none;
+}
+
+.not-found-copy {
+  position: relative;
+  z-index: 1;
+  max-width: 50rem;
+}
+
+.not-found-copy h1 {
+  max-width: 9ch;
+}
+
+.not-found-copy > p:not(.section-kicker) {
+  max-width: 40rem;
+  margin-block: var(--space-xl);
+  color: var(--paper-muted);
+  font-size: var(--text-lede);
+}
+
+@media (min-width: 48rem) {
+  .not-found {
+    min-height: 100svh;
+    grid-template-columns: minmax(18rem, 0.8fr) minmax(25rem, 1.2fr);
+    align-items: center;
+  }
+
+  .not-found .wordmark {
+    position: absolute;
+    top: var(--space-3xl);
+    left: 0;
+  }
+
+  .not-found-code {
+    grid-column: 1;
+  }
+
+  .not-found-copy {
+    grid-column: 2;
+  }
+}
+
 /* Documentation */
 
 .docs-page {
