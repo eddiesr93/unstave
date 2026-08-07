@@ -1,11 +1,18 @@
 # unstave Launch Playbook — 100 Stars in a Sprint
 
-Status: **0 stars, repo public 2 days.** Goal: **≥100 stars** on
-`github.com/eddiesr93/unstave` within ~2 weeks.
+Status: **0 stars.** Goal: **≥100 stars** on `github.com/eddiesr93/unstave`.
+
+**LAUNCH READY ✅ — as of 2026-08-07:**
+- `@unstave/cli` 0.2.2 is **live on npm** (verified: `npx @unstave/cli --version`
+  → `unstave 0.2.2`), plus 7 prebuilt platform packages.
+- crates.io + npm all published; release page
+  `releases/tag/v0.2.2` titled and noted; CI matrix green on every target.
+- `npx @unstave/cli analyze` is the zero-friction entry point for the TS/React
+  audience. The posts below are final and ready to publish.
 
 The product is genuinely differentiated and the README/site are strong. Stars at
 this stage come from **distribution, not code**. The plan below is ordered by
-impact. Every post is drafted and ready for you to approve and publish.
+impact. Every post is drafted for you to approve and publish.
 
 ---
 
@@ -56,25 +63,26 @@ Implementation notes:
 
 ## 2. Launch schedule (sprint)
 
-Aim to concentrate the burst in **one week**, coordinated so traffic compounds.
-All assets below are drafted in section 4.
+All infrastructure is shipped. The burst is a **one-week push**, concentrated so
+traffic compounds. Dates below assume today is Fri 2026-08-07; Show HN performs
+best **Tue–Thu, early morning US Pacific** (the "why is this front-page-worthy"
+judgement hours are US morning; EU comes online mid-morning).
 
-| Day | Move | Target |
-|-----|------|--------|
-| D0 | Ship `@unstave/cli` + fix any install path; re-verify all four install commands | — |
-| D0 | **Show HN** post (the big swing) | HN front page candidates |
-| D0 | X/Twitter thread (images from the real report) | Dev Twitter |
-| D1 | Reddit `r/typescript` (text post, question-led, no hard sell) | TS audience |
-| D1 | Reddit `r/reactjs` (angled at Vite dev-server slowness) | React audience |
-| D2 | Reddit `r/programming` / r/rust (Rust + performance angle) | broad |
-| D2 | DEV.to cross-post of the launch article (update the lead) | DEV community |
-| D3 | LinkedIn (professional angle: monorepo perf, measurable ROI) | network |
-| D4 | Journalist/OSS roundups — informal note to OSS newsletters | long tail |
-| D5+ | Respond to every comment; turn answers into a FAQ; re-engage | retention |
+| Day | Move | Windows / notes |
+|-----|------|-----------------|
+| **Tue 08-11** ~7:00 PT | **Show HN** post — the big swing | Tue heartbeat; aim 7:00–7:30 PT, not the weekend/Mon/Fri |
+| Tue 08-11 ~later | **X thread** with live report images | ride Show HN attention |
+| **Wed 08-12** ~6:00 PT | Reddit `r/typescript` (question-led) | weekday mornings US/EU |
+| Wed 08-12 ~9:00 PT | Reddit `r/reactjs` (Vite slowness angle) | different text, same proof |
+| **Thu 08-13** ~6:00 PT | Reddit `r/programming` + `r/rust` (perf angle) | broad reach |
+| Thu 08-13 | DEV.to cross-post (update the lead, add CTA) | `#typescript #react #vite #showdev` |
+| **Fri 08-14** | LinkedIn (professional: monorepo perf, measurable ROI) | weekday |
+| **Mon 08-17+** | OSS newsletters / mega-lists / Product Hunt | long tail |
+| ongoing | Reply to every comment; fold answers into a FAQ; re-engage | retention |
 
-Timing notes: Show HN works best **early morning US Pacific, weekdays** (and not
-the first/last days of the week). Reddit prefers **weekday mornings US/EU**.
-Never post the same text twice; each channel gets its own angle.
+Never post the same text twice; each channel gets its own angle. Show HN first
+comment should be substantive (explain the invisible dev-server cost mechanic) so
+the thread doesn't read as a bare link drop.
 
 ---
 
@@ -84,17 +92,18 @@ Verified already in place: GitHub topics (10 good ones), site has schema.org +
 OG/Twitter + sitemap + canonical, crates.io/npm READMEs, `keywords` metadata.
 
 Still open:
+- [x] **`@unstave/cli` npm path** — shipped in 0.2.2; linked from the README
+  install block (first), and the site install panel defaults to `npx`.
+- [x] **GitHub release page** for v0.2.2 — titled and noted (`releases/tag/v0.2.2`).
 - [ ] **crates.io description** is good but generic. Consider a more search-y line
   once 1.0-ish: mention "barrel files", "dead exports", "import cycles". (Republish
   only alongside a release — don't churn.)
-- [ ] **npm** `@unstave/vite-plugin` and `@unstave/node` READMEs are solid. When
-  `@unstave/cli` ships, link it from both and from the main README install block
-  (put `npx @unstave/cli` **first**).
+- [ ] **npm READMEs**: `@unstave/node` and `@unstave/vite-plugin` already link the
+  CLI; confirm the homepage + description keywords stay current after the launch.
 - [ ] **Search intent coverage**: people search "barrel files typescript",
   "why is my vite dev server slow", "index.ts re-export too many modules". Make
   sure the README + one docs page literally contain those phrases. The site page
   already covers the concept well.
-- [ ] **GitHub repo description** (currently great) — keep it keyword-rich.
 - [ ] Add the repo to **OSS newsletters / dev-tool roundups** (see §5).
 
 ---
@@ -102,6 +111,44 @@ Still open:
 ## 4. Drafted launch assets
 
 Paste these after approving. Replace `[NAME]`/`[handle]` placeholders.
+
+### 4.0 Assets for the posts (run these yourself — 30 seconds)
+
+The posts reference real output. On **any TypeScript repo you have** (or the
+repo's own fixture for a tiny example), run:
+
+```bash
+npx @unstave/cli analyze --format terminal --format html     # big summary + HTML
+npx @unstave/cli barrels                                     # amplification table
+npx @unstave/cli fix --dry-run                               # the diff, nothing touched
+```
+
+Screenshot the **barrels table** (X post 4) and the **fix diff** (X post 6); the
+HTML opens as the interactive graph you can record. Producer's own fixture gives
+a clean, small output to demo (nested-barrels, 7 files):
+
+```
+$ npx @unstave/cli barrels --root nested-barrels
+3 barrel(s) classified, 1 of them imported
+
+Barrel amplification
+┌────────────────┬───────┬──────┬────────┬───────┬──────┬────────────┐
+│ barrel         ┆ sites ┆ cost ┆ excess ┆ worst ┆ amp  ┆ rewritable │
+╞════════════════╪═══════╪══════╪════════╪═══════╪══════╪════════════╡
+│ src/a/index.ts ┆ 1     ┆ 6    ┆ 5      ┆ 5     ┆ 6.0× ┆ 1/1        │
+└────────────────┴───────┴──────┴────────┴───────┴──────┴────────────┘
+
+$ npx @unstave/cli fix --root nested-barrels
+--- a/src/main.ts
++++ b/src/main.ts
+@@ -1,2 +1,2 @@
+-import { one } from './a';
++import { one } from './a/b/c/one';
+ export const used = one;
+1 file(s) would change, 1 import(s) would be rewritten
+```
+
+Live HTML report for the same fixture: https://eddiesr93.github.io/unstave/sample-report.html
 
 ### 4.1 Show Hacker News
 
@@ -316,9 +363,8 @@ cause. Mine turned out to be barrels.
   "dev server slow", "barrel files", "too many modules" and give concrete, helpful
   answers that link the tool only where apt. This is the most reliable source of
   genuine, qualified stars.
-- [ ] **GitHub social proof**: add a short `Contributors`/`Sparkline` friendly
-  CONTRIBUTING (exists); enable **Discussions** (README links to discussion
-  categories already — make sure the tab is actually enabled on the repo).
+- [ ] **GitHub social proof**: CONTRIBUTING and **Discussions** are both live and
+  enabled on the repo (verified 2026-08-07). Link the categories from posts.
 - [ ] **Star button priming**: the README already asks for stars in a tasteful,
   outcome-based way ("if it surfaces a real bottleneck"). Keep it.
 
@@ -336,10 +382,12 @@ cause. Mine turned out to be barrels.
 
 ## 7. What I need from you to proceed
 
-1. **Approve the `@unstave/cli` npm wrapper** as the top engineering task
-   (highest impact, ~work). I'll implement it on your go-ahead.
-2. **Approve the posts** in §4 (edit tone/links), then publish on the schedule in §2.
-3. Tell me your **X/LinkedIn handles** to slot into placeholders, or leave generic.
-4. Optional: pick the **HN title** you prefer from §4.1.
+1. **Publish the posts** in §4 on the schedule in §2. Everything is live and
+   verified; the only remaining decision is when you press publish.
+2. OPTIONAL: tell me your **X/LinkedIn handles** to slot into placeholders, or
+   leave generic.
+3. OPTIONAL: pick the **HN title** from §4.1 (default recommendation: #1 —
+   `Show HN: I built a tool that finds why one import loads 1,000 modules`).
 
-I recommend we do them in that order: ship the npm CLI → launch burst → long-tail.
+Then: watch the Metrics in §6 and feed answers back — I'll turn comment themes
+into a FAQ and iterate the next release around what the community cares about.
