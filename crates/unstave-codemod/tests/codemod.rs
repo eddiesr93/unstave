@@ -119,6 +119,24 @@ fn preserve_style_follows_the_importers_predominant_path_style() {
 }
 
 #[test]
+fn preserves_node_next_js_extensions_and_no_semicolon_style() {
+    let root = fixture("node-next-style");
+    let config = Config::default();
+    let analysis = analyze(&root, &config).expect("fixture should analyze");
+    let graph = ModuleGraph::build(&analysis.modules);
+
+    let result =
+        plan(&analysis, &graph, &config, &CodemodOptions::default()).expect("codemod should plan");
+
+    assert_eq!(result.files_changed(), 1);
+    assert_eq!(result.imports_rewritten, 1);
+    assert_eq!(
+        result.files[0].rewritten,
+        "import { Widget } from './widget.js'\n\nexport const widget = new Widget()\n"
+    );
+}
+
+#[test]
 fn preserves_default_symbol_aliases_and_type_modifiers_when_splitting() {
     let root = fixture("codemod");
     let config = Config::default();

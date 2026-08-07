@@ -120,6 +120,10 @@ pub fn plan(
         }) {
             continue;
         }
+        let original = std::fs::read_to_string(module.path()).map_err(|source| Error::Read {
+            path: module.path().to_path_buf(),
+            source,
+        })?;
         let mut candidates = Vec::new();
 
         for import in &module.facts.imports {
@@ -190,6 +194,7 @@ pub fn plan(
             candidates.push(Candidate {
                 span: import.span,
                 source_specifier: import.specifier.clone(),
+                semicolon: import_has_semicolon(&original, import.span),
                 by_definition,
             });
         }
@@ -215,6 +220,7 @@ pub fn plan(
                     .entry(definition.clone())
                     .or_insert_with(|| TargetGroup {
                         source_specifier: candidate.source_specifier.clone(),
+                        semicolon: candidate.semicolon,
                         bindings: Vec::new(),
                     });
                 extend_unique(&mut target.bindings, bindings);
@@ -262,7 +268,12 @@ pub fn plan(
                 let anchor = imports[0];
                 edits.push(Edit {
                     span: anchor.span,
-                    replacement: render_import(&anchor.specifier, &combined, false),
+                    replacement: render_import(
+                        &anchor.specifier,
+                        &combined,
+                        false,
+                        import_has_semicolon(&original, anchor.span),
+                    ),
                 });
                 for duplicate in imports.iter().skip(1) {
                     edits.push(Edit {
@@ -280,7 +291,7 @@ pub fn plan(
                 options.import_style,
                 &aliases,
             );
-            let statement = render_import(&specifier, &target.bindings, false);
+            let statement = render_import(&specifier, &target.bindings, false, target.semicolon);
             unanchored.push((specifier, statement));
         }
 
@@ -299,10 +310,6 @@ pub fn plan(
             }
         }
 
-        let original = std::fs::read_to_string(module.path()).map_err(|source| Error::Read {
-            path: module.path().to_path_buf(),
-            source,
-        })?;
         let rewritten = apply_edits(&original, &mut edits);
         result.imports_rewritten += rewritten_imports;
         result.files.push(FileChange {
@@ -357,12 +364,14 @@ fn has_namespace_merge_conflict(module: &unstave_core::Module, candidate: &Candi
 struct Candidate {
     span: Span,
     source_specifier: String,
+    semicolon: bool,
     by_definition: BTreeMap<PathBuf, Vec<Binding>>,
 }
 
 #[derive(Debug)]
 struct TargetGroup {
     source_specifier: String,
+    semicolon: bool,
     bindings: Vec<Binding>,
 }
 
@@ -387,7 +396,7 @@ fn definition_specifier(
     style: ImportStyle,
     aliases: &AliasResolver,
 ) -> String {
-    match style {
+    let specifier = match style {
         ImportStyle::Alias => aliases
             .specifier_for(module.path(), definition)
             .unwrap_or_else(|| relative_specifier(module.path(), definition)),
@@ -401,7 +410,25 @@ fn definition_specifier(
         ImportStyle::Relative | ImportStyle::Preserve => {
             relative_specifier(module.path(), definition)
         }
+    };
+    match runtime_extension(source_specifier) {
+        Some(extension) if !specifier.ends_with(extension) => {
+            format!("{specifier}{extension}")
+        }
+        _ => specifier,
     }
+}
+
+fn runtime_extension(specifier: &str) -> Option<&'static str> {
+    [".mjs", ".cjs", ".js"]
+        .into_iter()
+        .find(|extension| specifier.ends_with(extension))
+}
+
+fn import_has_semicolon(source: &str, span: Span) -> bool {
+    source
+        .get(span.start as usize..span.end as usize)
+        .is_some_and(|statement| statement.trim_end().ends_with(';'))
 }
 
 fn apply_edits(source: &str, edits: &mut [Edit]) -> String {
@@ -416,7 +443,13 @@ fn apply_edits(source: &str, edits: &mut [Edit]) -> String {
     output
 }
 
-fn render_import(specifier: &str, bindings: &[Binding], statement_type_only: bool) -> String {
+fn render_import(
+    specifier: &str,
+    bindings: &[Binding],
+    statement_type_only: bool,
+    semicolon: bool,
+) -> String {
+    let terminator = if semicolon { ";" } else { "" };
     let all_type_only = statement_type_only || bindings.iter().all(|binding| binding.type_only);
     let default = bindings
         .iter()
@@ -452,7 +485,10 @@ fn render_import(specifier: &str, bindings: &[Binding], statement_type_only: boo
     let mut statements = Vec::new();
     if type_only_default_split {
         let default = default.expect("type_only_default_split implies a default binding");
-        statements.push(format!("import type {} from '{specifier}';", default.local));
+        statements.push(format!(
+            "import type {} from '{specifier}'{terminator}",
+            default.local
+        ));
     }
 
     if can_use_default_clause {
@@ -462,17 +498,17 @@ fn render_import(specifier: &str, bindings: &[Binding], statement_type_only: boo
         if named.is_empty() {
             let type_keyword = if all_type_only { " type" } else { "" };
             statements.push(format!(
-                "import{type_keyword} {default} from '{specifier}';"
+                "import{type_keyword} {default} from '{specifier}'{terminator}"
             ));
         } else {
             statements.push(format!(
-                "import {default}, {{ {named} }} from '{specifier}';"
+                "import {default}, {{ {named} }} from '{specifier}'{terminator}"
             ));
         }
     } else {
         let type_keyword = if all_type_only { " type" } else { "" };
         statements.push(format!(
-            "import{type_keyword} {{ {named} }} from '{specifier}';"
+            "import{type_keyword} {{ {named} }} from '{specifier}'{terminator}"
         ));
     }
 
