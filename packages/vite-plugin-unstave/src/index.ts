@@ -115,7 +115,7 @@ function isEnabled(
 
 function warn(config: ResolvedConfig, report: AnalysisReport, threshold: number): void {
   for (const barrel of report.amplification.barrels) {
-    if (barrel.maxAmplification !== null && barrel.maxAmplification > threshold) {
+    if (barrel.maxAmplification > threshold) {
       config.logger.warn(
         `[unstave] ${barrel.barrel} amplifies imports ${barrel.maxAmplification.toFixed(1)}× ` +
           `(${barrel.totalExcess} excess module edges)`,
