@@ -47,7 +47,7 @@ if (process.platform !== 'win32') {
 }
 
 if (process.env.UNSTAVE_CLI_DEBUG) {
-  console.error(`[unstrv] spawning ${binary}`)
+  console.error(`[unstave] spawning ${binary}`)
 }
 
 const result = spawnSync(binary, process.argv.slice(2), {
